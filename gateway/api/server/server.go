@@ -13,7 +13,7 @@ type Server struct {
 	server *http.Server
 }
 
-func New(cfg *config) *Server {
+func New(cfg *config) (*Server, error) {
 	s := new(http.Server)
 	srv := Server{
 		Mux:    http.NewServeMux(),
@@ -22,12 +22,11 @@ func New(cfg *config) *Server {
 	for _, url := range cfg.URLs {
 		h, err := newHandler(url)
 		if err != nil {
-			fmt.Printf("cannot add handler for path %s: %v\n", url.Path, err)
-			continue
+			return nil, err
 		}
 		srv.Mux.Handle(url.Path, h)
 	}
-	return &srv
+	return &srv, nil
 }
 
 func newHandler(u URL) (http.Handler, error) {

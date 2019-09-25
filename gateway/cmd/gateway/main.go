@@ -14,6 +14,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
 		os.Exit(2)
 	}
-	srv := server.New(cfg)
+	srv, err := server.New(cfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
+		os.Exit(2)
+	}
 	cli.RunServer(srv, "127.0.0.1:8080")
 }

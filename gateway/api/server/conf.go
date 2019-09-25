@@ -36,7 +36,7 @@ func (u URL) protocol() (protocol, error) {
 	} else if u.HTTP.Host != "" {
 		return HTTP, nil
 	}
-	return 0, errors.New("missing protocol")
+	return 0, errors.New("URL is missing protocol")
 }
 
 // config represents a server configuration read from a YAML file.
