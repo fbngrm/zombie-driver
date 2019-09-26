@@ -23,7 +23,8 @@ type URL struct {
 	Path   string `yaml:"path"`
 	Method string `yaml:"method"`
 	NSQ    struct {
-		Topic string `yaml:"topic"`
+		Topic    string   `yaml:"topic"`
+		TCPAddrs []string `yaml:"dest_tcp_addr"`
 	} `yaml:"nsq"`
 	HTTP struct {
 		Host string `yaml:"host"`
@@ -40,6 +41,7 @@ func (u URL) protocol() (protocol, error) {
 }
 
 // config represents a server configuration read from a YAML file.
+// NOTE: The configuration does not get validated or sanitized.
 type config struct {
 	URLs []URL `yaml:"urls"`
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	nsq "github.com/nsqio/go-nsq"
 )
 
 // TODO: CORS
@@ -17,7 +18,7 @@ func newHandler(u URL) (http.Handler, error) {
 	}
 	switch p {
 	case NSQ:
-		return &nsqHandler{}, nil
+		return newNSQHandler(u)
 	case HTTP:
 		return &httpHandler{}, nil
 	default:
@@ -30,7 +31,27 @@ type location struct {
 	Long float64 `json:"longitude"`
 }
 
-type nsqHandler struct{}
+type nsqHandler struct {
+	topic     string
+	producers map[string]*nsq.Producer
+}
+
+func newNSQHandler(u URL) (*nsqHandler, error) {
+	cfg := nsq.NewConfig()
+	cfg.UserAgent = fmt.Sprintf("go-nsq/%s", nsq.VERSION)
+	producers := make(map[string]*nsq.Producer)
+	for _, addr := range u.NSQ.TCPAddrs {
+		producer, err := nsq.NewProducer(addr, cfg)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create nsq.Producer - %s", err)
+		}
+		producers[addr] = producer
+	}
+	return &nsqHandler{
+		topic:     u.NSQ.Topic,
+		producers: producers,
+	}, nil
+}
 
 func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)

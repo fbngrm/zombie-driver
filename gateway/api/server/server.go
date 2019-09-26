@@ -22,9 +22,7 @@ func New(cfg *config) (*Server, error) {
 		if err != nil {
 			return nil, err
 		}
-		if url.Method == "" {
-			return nil, fmt.Errorf("missing method for URL: %+v", url)
-		}
+		// NOTE: relies on valid configuration
 		m.Handle(url.Path, h).Methods(url.Method)
 	}
 	return &Server{
