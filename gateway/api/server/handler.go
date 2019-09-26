@@ -26,9 +26,11 @@ func newHandler(u URL) (http.Handler, error) {
 	}
 }
 
+// TODO: evaluate value range for fields
 type location struct {
-	Lat  float64 `json:"latitude"`
-	Long float64 `json:"longitude"`
+	ID   uint16  `json:"id"`
+	Lat  float32 `json:"latitude"`
+	Long float32 `json:"longitude"`
 }
 
 type nsqHandler struct {
@@ -36,6 +38,8 @@ type nsqHandler struct {
 	producers map[string]*nsq.Producer
 }
 
+// NOTE: throttling is not enabled for producers which should be done in a
+// production environment.
 func newNSQHandler(u URL) (*nsqHandler, error) {
 	cfg := nsq.NewConfig()
 	cfg.UserAgent = fmt.Sprintf("go-nsq/%s", nsq.VERSION)
@@ -67,6 +71,13 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	vars := mux.Vars(r)
 	fmt.Fprintf(w, "Hi %s, I am at %+v!", vars["id"], l)
+	for _, producer := range n.producers {
+		err := producer.Publish(n.topic)
+		if err != nil {
+			return err
+		}
+	}
+
 }
 
 type httpHandler struct{}
