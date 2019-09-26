@@ -2,33 +2,40 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type Server struct {
-	Mux    *http.ServeMux
+	Mux    *mux.Router
 	server *http.Server
 }
 
 func New(cfg *config) (*Server, error) {
-	s := new(http.Server)
-	srv := Server{
-		Mux:    http.NewServeMux(),
-		server: s,
-	}
+	m := mux.NewRouter()
 	for _, url := range cfg.URLs {
 		h, err := newHandler(url)
 		if err != nil {
 			return nil, err
 		}
-		srv.Mux.Handle(url.Path, h)
+		if url.Method == "" {
+			return nil, fmt.Errorf("missing method for URL: %+v", url)
+		}
+		m.Handle(url.Path, h).Methods(url.Method)
 	}
-	return &srv, nil
+	return &Server{
+		Mux:    m,
+		server: new(http.Server),
+	}, nil
 }
 
+// TODO: CORS
 func newHandler(u URL) (http.Handler, error) {
 	p, err := u.protocol()
 	if err != nil {
@@ -65,10 +72,27 @@ func (s *Server) Run(ctx context.Context, addr string) error {
 	return err
 }
 
+type location struct {
+	Lat  float64 `json:"latitude"`
+	Long float64 `json:"longitude"`
+}
+
 type nsqHandler struct{}
 
 func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		// FIXME
+		panic(err)
+	}
+	var l location
+	err = json.Unmarshal(body, &l)
+	if err != nil {
+		// FIXME
+		panic(err)
+	}
+	vars := mux.Vars(r)
+	fmt.Fprintf(w, "Hi %s, I am at %+v!", vars["id"], l)
 }
 
 type httpHandler struct{}
