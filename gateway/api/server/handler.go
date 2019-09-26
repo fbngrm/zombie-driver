@@ -28,7 +28,7 @@ func newHandler(u URL) (http.Handler, error) {
 
 // TODO: evaluate value range for fields
 type location struct {
-	ID   uint16  `json:"id"`
+	ID   string  `json:"id"`
 	Lat  float32 `json:"latitude"`
 	Long float32 `json:"longitude"`
 }
@@ -69,15 +69,20 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// FIXME
 		panic(err)
 	}
-	vars := mux.Vars(r)
-	fmt.Fprintf(w, "Hi %s, I am at %+v!", vars["id"], l)
+	l.ID = mux.Vars(r)["id"] // relies on sane input for 'id'
+	b, err := json.Marshal(l)
+	if err != nil {
+		// FIXME
+		panic(err)
+	}
 	for _, producer := range n.producers {
-		err := producer.Publish(n.topic)
+		err := producer.Publish(n.topic, b)
 		if err != nil {
-			return err
+			// FIXME
+			panic(err)
 		}
 	}
-
+	w.WriteHeader(http.StatusOK)
 }
 
 type httpHandler struct{}
