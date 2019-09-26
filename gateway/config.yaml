@@ -4,6 +4,8 @@ urls:
     method: "PATCH"
     nsq:
       topic: "locations"
+      dest_tcp_addr:
+          - "127.0.0.1:4150"
   -
     path: "/drivers/{id:[0-9]+}"
     method: "GET"
