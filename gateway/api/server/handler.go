@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/gorilla/mux"
 	nsq "github.com/nsqio/go-nsq"
@@ -20,7 +22,12 @@ func newHandler(u URL) (http.Handler, error) {
 	case NSQ:
 		return newNSQHandler(u)
 	case HTTP:
-		return &httpHandler{}, nil
+		// in a real world scenario we would factor this out to perform more
+		// sofisticated operations like reqriting headers for https requests etc.
+		return httputil.NewSingleHostReverseProxy(&url.URL{
+			Scheme: "http",
+			Host:   u.HTTP.Host,
+		}), nil
 	default:
 		return nil, fmt.Errorf("no handler found for %s", p)
 	}
@@ -64,12 +71,15 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	var l location
+	// marshal instead of decode since we expect a single JSON string
+	// only not a stream or additional data
 	err = json.Unmarshal(body, &l)
 	if err != nil {
 		// FIXME
 		panic(err)
 	}
-	l.ID = mux.Vars(r)["id"] // relies on sane input for 'id'
+	// relies on sane input for 'id'; currently sanitized by mux only
+	l.ID = mux.Vars(r)["id"]
 	b, err := json.Marshal(l)
 	if err != nil {
 		// FIXME
@@ -83,10 +93,4 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-}
-
-type httpHandler struct{}
-
-func (h *httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
 }
