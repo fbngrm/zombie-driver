@@ -18,13 +18,14 @@ import (
 // error reporting.
 func NewLogger() zerolog.Logger {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
-	logger = logger.Output(zerolog.ConsoleWriter{Out: f})
+	logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	// replace standard log
 	log.SetFlags(0)
 	log.SetOutput(logger)
 	return logger
 }
 
-func RunServer(srv *server.Server, addr string) error {
+func RunServer(srv *server.HTTPServer) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -36,5 +37,5 @@ func RunServer(srv *server.Server, addr string) error {
 		cancel()
 	}()
 
-	return srv.Run(ctx, addr)
+	return srv.Run(ctx)
 }

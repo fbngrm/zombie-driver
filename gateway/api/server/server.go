@@ -3,51 +3,57 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog"
 )
 
-type Server struct {
-	Mux    *mux.Router
+type HTTPServer struct {
 	server *http.Server
+	logger zerolog.Logger
 }
 
-func New(cfg *config) (*Server, error) {
-	m := mux.NewRouter()
+func New(port int, cfg *config, logger zerolog.Logger) (*HTTPServer, error) {
+	router := mux.NewRouter()
 	for _, url := range cfg.URLs {
-		h, err := newHandler(url)
+		h, err := newHandler(url, logger)
 		if err != nil {
 			return nil, err
 		}
 		// NOTE: relies on valid configuration
-		m.Handle(url.Path, h).Methods(url.Method)
+		router.Handle(url.Path, h).Methods(url.Method)
 	}
-	return &Server{
-		Mux:    m,
-		server: new(http.Server),
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: router,
+	}
+	return &HTTPServer{
+		server: server,
+		logger: logger,
 	}, nil
 }
 
-func (s *Server) Run(ctx context.Context, addr string) error {
-	s.server.Handler = s.Mux
-
-	l, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
-
+func (s *HTTPServer) Run(ctx context.Context) error {
 	go func() {
-		fmt.Println("Listening on " + l.Addr().String())
-		err := s.server.Serve(l)
-		if err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+		s.logger.Info().Msgf("Listening on %s", s.server.Addr)
+		err := s.server.ListenAndServe()
+		if err != http.ErrServerClosed {
+			s.logger.Fatal().Msgf("http server exited with error: %v", err)
+		} else {
+			s.logger.Info().Msgf("http server has closed")
 		}
 	}()
 
 	<-ctx.Done()
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := s.server.Shutdown(ctx)
+	if err != nil {
+		s.logger.Error().Err(err).Msg("failed to shutdown server")
+	}
 	return err
 }
