@@ -9,10 +9,10 @@ import (
 	"net/url"
 
 	"github.com/gorilla/mux"
+	"github.com/heetch/regula/api"
 	nsq "github.com/nsqio/go-nsq"
 )
 
-// TODO: CORS
 func newHandler(u URL) (http.Handler, error) {
 	p, err := u.protocol()
 	if err != nil {
@@ -67,30 +67,51 @@ func newNSQHandler(u URL) (*nsqHandler, error) {
 func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		// FIXME
-		panic(err)
+		writeError(w, r, err, http.StatusInternalServerError)
 	}
 	var l location
 	// marshal instead of decode since we expect a single JSON string
 	// only not a stream or additional data
 	err = json.Unmarshal(body, &l)
 	if err != nil {
-		// FIXME
-		panic(err)
+		// should be expose error details here?
+		writeError(w, r, err, http.StatusBadRequest)
 	}
 	// relies on sane input for 'id'; currently sanitized by mux only
 	l.ID = mux.Vars(r)["id"]
 	b, err := json.Marshal(l)
 	if err != nil {
-		// FIXME
-		panic(err)
+		writeError(w, r, err, http.StatusInternalServerError)
 	}
 	for _, producer := range n.producers {
 		err := producer.Publish(n.topic, b)
 		if err != nil {
-			// FIXME
-			panic(err)
+			writeError(w, r, err, http.StatusInternalServerError)
 		}
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func encodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status int) {
+	w.WriteHeader(status)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(v); err != nil {
+		// FIXME
+		fmt.Errorf(err)
+	}
+}
+
+func writeError(w http.ResponseWriter, r *http.Request, err error, code int) {
+	// // Prepare log.
+	// logger := loggerFromRequest(r).With().
+	// 	Err(err).
+	// 	Int("status", code).
+	// 	Logger()
+	// do not expose internal errors to clients
+	if code == http.StatusInternalServerError {
+		// logger.Error().Msg("unexpected http error")
+		encodeJSON(w, r, &api.Error{Err: err.Error()}, code)
+	}
+	// logger.Debug().Msg("http error")
+	encodeJSON(w, r, &api.Error{Err: err.Error()}, code)
 }
