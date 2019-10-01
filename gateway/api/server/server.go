@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/gateway/api/middleware"
@@ -43,19 +42,14 @@ func (s *HTTPServer) Run() {
 	}
 }
 
-func (s *HTTPServer) Shutdown() error {
-	s.logger.Info().Msg("shutting down HTTP server")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (s *HTTPServer) Shutdown(ctx context.Context) {
+	s.logger.Info().Msg("shutting down HTTP server down")
 
 	// this stops accepting new requests and waits for the running ones to
 	// finish before returning. See net/http docs for details.
 	if err := s.server.Shutdown(ctx); err != nil {
 		s.logger.Error().Err(err).Msg("http server shutdown error")
-		return err
 	}
-	return nil
 }
 
 func newGatewayHandler(cfg *config, logger zerolog.Logger) (http.Handler, error) {
