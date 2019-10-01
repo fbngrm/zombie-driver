@@ -36,6 +36,12 @@ func newHandler(u URL, logger zerolog.Logger) (http.Handler, error) {
 	}
 }
 
+type readinessHandler struct{}
+
+func (h *readinessHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(health())
+}
+
 // TODO: evaluate value range for fields
 type location struct {
 	ID   string  `json:"id"`
@@ -138,6 +144,5 @@ func writeError(w http.ResponseWriter, r *http.Request, err error, code int) {
 	} else {
 		logger.Debug().Msg("http error")
 	}
-
 	encodeJSON(w, r, &api.Error{Err: err.Error()}, code)
 }

@@ -77,5 +77,6 @@ func newGatewayHandler(cfg *config, logger zerolog.Logger) (http.Handler, error)
 		// NOTE: relies on valid URL configuration
 		router.Handle(url.Path, middleware.Use(h, mw...)).Methods(url.Method)
 	}
+	router.Handle("/ready", &readinessHandler{})
 	return router, nil
 }
