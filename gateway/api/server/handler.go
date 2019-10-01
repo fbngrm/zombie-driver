@@ -10,7 +10,7 @@ import (
 	"net/url"
 
 	"github.com/gorilla/mux"
-	"github.com/heetch/regula/api"
+	"github.com/heetch/FabianG-technical-test/gateway/api"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
@@ -40,13 +40,6 @@ type readinessHandler struct{}
 
 func (h *readinessHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(health())
-}
-
-// TODO: evaluate value range for fields
-type location struct {
-	ID   string  `json:"id"`
-	Lat  float32 `json:"latitude"`
-	Long float32 `json:"longitude"`
 }
 
 type nsqHandler struct {
@@ -79,7 +72,7 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	var l location
+	var l api.Location
 	// marshal instead of decode since we expect a single JSON string
 	// only not a stream or additional data
 	err = json.Unmarshal(body, &l)

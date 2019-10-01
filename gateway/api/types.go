@@ -18,3 +18,10 @@ func (e Error) Error() string {
 		e.Response.StatusCode,
 		e.Err)
 }
+
+// TODO: evaluate value range for fields
+type Location struct {
+	ID   string  `json:"id"`
+	Lat  float32 `json:"latitude"`
+	Long float32 `json:"longitude"`
+}
