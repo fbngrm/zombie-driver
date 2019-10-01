@@ -36,27 +36,26 @@ func New(port int, cfg *config, logger zerolog.Logger) (*HTTPServer, error) {
 	}, nil
 }
 
-func (s *HTTPServer) Run(ctx context.Context) error {
-	go func() {
-		s.logger.Info().Msgf("listening on %s", s.server.Addr)
-		err := s.server.ListenAndServe()
-		if err != http.ErrServerClosed {
-			s.logger.Fatal().Err(err).Msg("http server exited with error")
-		} else {
-			s.logger.Info().Msgf("http server has closed")
-		}
-	}()
+func (s *HTTPServer) Run() {
+	s.logger.Info().Msgf("listening on %s", s.server.Addr)
+	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
+		s.logger.Fatal().Err(err).Msg("http server exited with error")
+	}
+}
 
-	<-ctx.Done()
+func (s *HTTPServer) Shutdown() error {
+	s.logger.Info().Msg("shutting down HTTP server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := s.server.Shutdown(ctx)
-	if err != nil {
+	// this stops accepting new requests and waits for the running ones to
+	// finish before returning. See net/http docs for details.
+	if err := s.server.Shutdown(ctx); err != nil {
 		s.logger.Error().Err(err).Msg("http server shutdown error")
+		return err
 	}
-	return err
+	return nil
 }
 
 func newGatewayHandler(cfg *config, logger zerolog.Logger) (http.Handler, error) {

@@ -8,7 +8,7 @@ import (
 var healthCode = int32(http.StatusOK)
 
 // HealthCheckShutDown set the health to not ok
-func HealthCheckShuwtDown() {
+func HealthCheckShutDown() {
 	atomic.StoreInt32(&healthCode, http.StatusServiceUnavailable)
 }
 

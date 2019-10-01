@@ -37,5 +37,15 @@ func RunServer(srv *server.HTTPServer) error {
 		cancel()
 	}()
 
-	return srv.Run(ctx)
+	go srv.Run()
+
+	<-ctx.Done()
+
+	server.HealthCheckShutDown()
+
+	// when shutting down, we first gracefully shutting down the main http
+	// server, waiting for it to finish processing all the running requests,
+	// then we shut down the metrics server, which includes waiting for
+	// prometheus to scrape the metrics one more time, to avoid loosing any data.
+	return srv.Shutdown()
 }
