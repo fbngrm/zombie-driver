@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// Copied from https://github.com/heetch/regula/blob/master/api/types.go
 type Error struct {
 	Err      string         `json:"error"`
 	Response *http.Response `json:"-"` // Will not be marshalled

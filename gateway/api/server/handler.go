@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -11,9 +12,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/heetch/regula/api"
 	nsq "github.com/nsqio/go-nsq"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/hlog"
 )
 
-func newHandler(u URL) (http.Handler, error) {
+func newHandler(u URL, logger zerolog.Logger) (http.Handler, error) {
 	p, err := u.protocol()
 	if err != nil {
 		return nil, err
@@ -68,6 +71,7 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		writeError(w, r, err, http.StatusInternalServerError)
+		return
 	}
 	var l location
 	// marshal instead of decode since we expect a single JSON string
@@ -76,42 +80,64 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// should be expose error details here?
 		writeError(w, r, err, http.StatusBadRequest)
+		return
 	}
 	// relies on sane input for 'id'; currently sanitized by mux only
 	l.ID = mux.Vars(r)["id"]
 	b, err := json.Marshal(l)
 	if err != nil {
 		writeError(w, r, err, http.StatusInternalServerError)
+		return
 	}
 	for _, producer := range n.producers {
 		err := producer.Publish(n.topic, b)
 		if err != nil {
 			writeError(w, r, err, http.StatusInternalServerError)
+			return
 		}
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
+// Copied from https://github.com/heetch/regula/blob/master/api/server/handler.go
+// HTTP errors
+var (
+	errInternal = errors.New("internal_error")
+)
+
+// encodeJSON encodes v to w in JSON format.
 func encodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status int) {
-	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		// FIXME
-		fmt.Errorf(err)
+		loggerFromRequest(r).Error().Err(err).Interface("value", v).Msg("failed to encode value to http response")
 	}
 }
 
+func loggerFromRequest(r *http.Request) *zerolog.Logger {
+	logger := hlog.FromRequest(r).With().
+		Str("method", r.Method).
+		Str("url", r.URL.String()).
+		Logger()
+	return &logger
+}
+
+// writeError writes an error to the http response in JSON format.
 func writeError(w http.ResponseWriter, r *http.Request, err error, code int) {
-	// // Prepare log.
-	// logger := loggerFromRequest(r).With().
-	// 	Err(err).
-	// 	Int("status", code).
-	// 	Logger()
-	// do not expose internal errors to clients
+	// Prepare log.
+	logger := loggerFromRequest(r).With().
+		Err(err).
+		Int("status", code).
+		Logger()
+
+	// Hide error from client if it's internal.
 	if code == http.StatusInternalServerError {
-		// logger.Error().Msg("unexpected http error")
-		encodeJSON(w, r, &api.Error{Err: err.Error()}, code)
+		logger.Error().Msg("unexpected http error")
+		err = errInternal
+	} else {
+		logger.Debug().Msg("http error")
 	}
-	// logger.Debug().Msg("http error")
+
 	encodeJSON(w, r, &api.Error{Err: err.Error()}, code)
 }
