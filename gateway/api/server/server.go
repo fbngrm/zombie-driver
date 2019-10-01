@@ -38,10 +38,10 @@ func New(port int, cfg *config, logger zerolog.Logger) (*HTTPServer, error) {
 
 func (s *HTTPServer) Run(ctx context.Context) error {
 	go func() {
-		s.logger.Info().Msgf("Listening on %s", s.server.Addr)
+		s.logger.Info().Msgf("listening on %s", s.server.Addr)
 		err := s.server.ListenAndServe()
 		if err != http.ErrServerClosed {
-			s.logger.Fatal().Msgf("http server exited with error: %v", err)
+			s.logger.Fatal().Err(err).Msg("http server exited with error")
 		} else {
 			s.logger.Info().Msgf("http server has closed")
 		}
@@ -54,7 +54,7 @@ func (s *HTTPServer) Run(ctx context.Context) error {
 
 	err := s.server.Shutdown(ctx)
 	if err != nil {
-		s.logger.Error().Err(err).Msg("failed to shutdown server")
+		s.logger.Error().Err(err).Msg("http server shutdown error")
 	}
 	return err
 }
