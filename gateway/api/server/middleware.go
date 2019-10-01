@@ -46,7 +46,7 @@ func NewRecoverHandler() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					log.Ctx(t.Context()).Error().Msgf("PANIC: %+v", err)
+					zerolog.Ctx(r.Context()).Error().Msgf("PANIC: %+v", err)
 					http.Error(w, "Internal Server Error", 500)
 				}
 			}()
