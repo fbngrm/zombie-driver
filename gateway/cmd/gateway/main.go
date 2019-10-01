@@ -14,11 +14,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
 		os.Exit(2)
 	}
-	srv, err := server.New(8080, cfg, cli.NewLogger())
+	log := cli.NewLogger()
+	httpSrv, err := server.New(8080, cfg, log)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
 		os.Exit(2)
 	}
-
-	cli.RunServer(srv)
+	metricsSrv := server.NewMetrics(9102, log)
+	cli.RunServer(httpSrv, metricsSrv)
 }

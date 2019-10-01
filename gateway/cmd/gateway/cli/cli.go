@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
 	"github.com/rs/zerolog"
@@ -25,7 +26,7 @@ func NewLogger() zerolog.Logger {
 	return logger
 }
 
-func RunServer(srv *server.HTTPServer) error {
+func RunServer(httpSrv *server.HTTPServer, metricsSrv *server.MetricsServer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -37,15 +38,20 @@ func RunServer(srv *server.HTTPServer) error {
 		cancel()
 	}()
 
-	go srv.Run()
+	go httpSrv.Run()
+	go metricsSrv.Run()
 
 	<-ctx.Done()
 
 	server.HealthCheckShutDown()
 
+	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	// when shutting down, we first gracefully shutting down the main http
 	// server, waiting for it to finish processing all the running requests,
 	// then we shut down the metrics server, which includes waiting for
 	// prometheus to scrape the metrics one more time, to avoid loosing any data.
-	return srv.Shutdown()
+	httpSrv.Shutdown(ctx)
+	metricsSrv.Shutdown(ctx)
 }
