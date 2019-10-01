@@ -7,7 +7,6 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
-	"github.com/upcload/slog"
 )
 
 // Middleware wraps handler functions
@@ -41,13 +40,13 @@ func NewAuthCheck(token string) Middleware {
 
 // NewRecoverHandler produces middleware for use as the last request handler
 // in order to avoid the service completely crashing when there's a runtime
-// panic
+// panic.
 func NewRecoverHandler() Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					slog.GetContextLogger(r.Context()).Errorf("PANIC: %+v", err)
+					log.Ctx(t.Context()).Error().Msgf("PANIC: %+v", err)
 					http.Error(w, "Internal Server Error", 500)
 				}
 			}()
