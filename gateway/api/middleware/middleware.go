@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"crypto/subtle"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -75,4 +76,83 @@ func NewContextLog(logger zerolog.Logger) []Middleware {
 	mw = append(mw, hlog.RefererHandler("referer"))
 	mw = append(mw, hlog.RequestIDHandler("req_id", "Request-Id"))
 	return mw
+}
+
+type statusResponseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func newStatusResponseWriter(rw http.ResponseWriter) *statusResponseWriter {
+	switch v := rw.(type) {
+	case *statusResponseWriter:
+		return v
+	default:
+		return &statusResponseWriter{ResponseWriter: rw}
+	}
+}
+
+func (rw *statusResponseWriter) WriteHeader(status int) {
+	rw.status = status
+	rw.ResponseWriter.WriteHeader(status)
+}
+
+// MetricsConfig keeps metrics configuration for use by MetricsHandler
+type MetricsConfig struct {
+	reqGauge *prom.GaugeVec
+	respCnt  *prom.CounterVec
+	reqTime  *prom.HistogramVec
+}
+
+// NewMetricsConfig returns a new empty MetricsConfig structure
+func NewMetricsConfig() *MetricsConfig {
+	return &MetricsConfig{}
+}
+
+// WithGauge adds gauge measuring how many requests are being handled at the
+// moment. "path" label is set to the URL path.
+func (mc *MetricsConfig) WithGauge(gauge *prom.GaugeVec) *MetricsConfig {
+	mc.reqGauge = gauge
+	return mc
+}
+
+// WithCounter adds counter that is updated after processing every request.
+// "path" label is set to the URL path. "status_code" label is set on the
+// counter to the status code of the response
+func (mc *MetricsConfig) WithCounter(cnt *prom.CounterVec) *MetricsConfig {
+	mc.respCnt = cnt
+	return mc
+}
+
+// WithTimeHist adds histogram that measures distribution of the response
+// times. "path" label is set to the URL path. "status_code" label is set on
+// the counter to the status code of the response
+func (mc *MetricsConfig) WithTimeHist(hist *prom.HistogramVec) *MetricsConfig {
+	mc.reqTime = hist
+	return mc
+}
+
+// MakeMetricsHandler returns middleware that updates prometheus metrics.
+func MakeMetricsHandler(mc *MetricsConfig) Middleware {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			startTime := time.Now()
+			sw := newStatusResponseWriter(w)
+			l := prom.Labels{"path": r.URL.Path}
+			if mc.reqGauge != nil {
+				mc.reqGauge.With(l).Inc()
+			}
+			h.ServeHTTP(sw, r)
+			if mc.reqGauge != nil {
+				mc.reqGauge.With(l).Dec()
+			}
+			l["status_code"] = fmt.Sprint(sw.status)
+			if mc.respCnt != nil {
+				mc.respCnt.With(l).Inc()
+			}
+			if mc.reqTime != nil {
+				mc.reqTime.With(l).Observe(time.Since(startTime).Seconds())
+			}
+		})
+	}
 }

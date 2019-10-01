@@ -10,10 +10,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// FIXME: in a real world scenario we would never hardcode a token here!
-// Instead it should be loaded from an encrypted env configuration. For the
-// sake of simplicity in a coding challenge, we violate this rule.
-var authtoken = "AUTH_TOKEN"
+var (
+	// FIXME: in a real world scenario we would never hardcode a token here!
+	// Instead it should be loaded from an encrypted env configuration. For the
+	// sake of simplicity in a coding challenge, we violate this rule.
+	authtoken             = "AUTH_TOKEN"
+	responseTimeHistogram = prom.NewHistogramVec(
+		prom.HistogramOpts{
+			Name:    "gateway_response_time",
+			Help:    "histogram of response times for gateway http handlers",
+			Buckets: prom.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
+		},
+		[]string{"path", "status_code"},
+	)
+)
+
+func init() {
+	prom.MustRegister(responseTimeHistogram)
+}
 
 type HTTPServer struct {
 	server *http.Server
