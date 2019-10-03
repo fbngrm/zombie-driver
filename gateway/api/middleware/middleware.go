@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 )
@@ -99,9 +100,9 @@ func (rw *statusResponseWriter) WriteHeader(status int) {
 
 // MetricsConfig keeps metrics configuration for use by MetricsHandler
 type MetricsConfig struct {
-	reqGauge *prom.GaugeVec
-	respCnt  *prom.CounterVec
-	reqTime  *prom.HistogramVec
+	reqGauge *prometheus.GaugeVec
+	respCnt  *prometheus.CounterVec
+	reqTime  *prometheus.HistogramVec
 }
 
 // NewMetricsConfig returns a new empty MetricsConfig structure
@@ -111,7 +112,7 @@ func NewMetricsConfig() *MetricsConfig {
 
 // WithGauge adds gauge measuring how many requests are being handled at the
 // moment. "path" label is set to the URL path.
-func (mc *MetricsConfig) WithGauge(gauge *prom.GaugeVec) *MetricsConfig {
+func (mc *MetricsConfig) WithGauge(gauge *prometheus.GaugeVec) *MetricsConfig {
 	mc.reqGauge = gauge
 	return mc
 }
@@ -119,7 +120,7 @@ func (mc *MetricsConfig) WithGauge(gauge *prom.GaugeVec) *MetricsConfig {
 // WithCounter adds counter that is updated after processing every request.
 // "path" label is set to the URL path. "status_code" label is set on the
 // counter to the status code of the response
-func (mc *MetricsConfig) WithCounter(cnt *prom.CounterVec) *MetricsConfig {
+func (mc *MetricsConfig) WithCounter(cnt *prometheus.CounterVec) *MetricsConfig {
 	mc.respCnt = cnt
 	return mc
 }
@@ -127,18 +128,18 @@ func (mc *MetricsConfig) WithCounter(cnt *prom.CounterVec) *MetricsConfig {
 // WithTimeHist adds histogram that measures distribution of the response
 // times. "path" label is set to the URL path. "status_code" label is set on
 // the counter to the status code of the response
-func (mc *MetricsConfig) WithTimeHist(hist *prom.HistogramVec) *MetricsConfig {
+func (mc *MetricsConfig) WithTimeHist(hist *prometheus.HistogramVec) *MetricsConfig {
 	mc.reqTime = hist
 	return mc
 }
 
-// MakeMetricsHandler returns middleware that updates prometheus metrics.
-func MakeMetricsHandler(mc *MetricsConfig) Middleware {
+// NewMetricsHandler returns middleware that updates prometheus metrics.
+func NewMetricsHandler(mc *MetricsConfig) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			startTime := time.Now()
 			sw := newStatusResponseWriter(w)
-			l := prom.Labels{"path": r.URL.Path}
+			l := prometheus.Labels{"path": r.URL.Path}
 			if mc.reqGauge != nil {
 				mc.reqGauge.With(l).Inc()
 			}
