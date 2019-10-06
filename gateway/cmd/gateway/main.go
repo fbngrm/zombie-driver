@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
 	"github.com/heetch/FabianG-technical-test/gateway/cmd/gateway/cli"
 )
 
 func main() {
-	cfg, err := server.LoadConfig("./config.yaml")
+	cfg, err := config.FromFile("./config.yaml")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
 		os.Exit(2)

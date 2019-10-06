@@ -6,7 +6,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	"github.com/heetch/FabianG-technical-test/gateway/api/middleware"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
 
@@ -15,18 +17,18 @@ var (
 	// Instead it should be loaded from an encrypted env configuration. For the
 	// sake of simplicity in a coding challenge, we violate this rule.
 	authtoken             = "AUTH_TOKEN"
-	responseTimeHistogram = prom.NewHistogramVec(
-		prom.HistogramOpts{
+	responseTimeHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
 			Name:    "gateway_response_time",
 			Help:    "histogram of response times for gateway http handlers",
-			Buckets: prom.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
+			Buckets: prometheus.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
 		},
 		[]string{"path", "status_code"},
 	)
 )
 
 func init() {
-	prom.MustRegister(responseTimeHistogram)
+	prometheus.MustRegister(responseTimeHistogram)
 }
 
 type HTTPServer struct {
@@ -34,7 +36,7 @@ type HTTPServer struct {
 	logger zerolog.Logger
 }
 
-func New(port int, cfg *config, logger zerolog.Logger) (*HTTPServer, error) {
+func New(port int, cfg *config.Config, logger zerolog.Logger) (*HTTPServer, error) {
 	router, err := newGatewayHandler(cfg, logger)
 	if err != nil {
 		return nil, err
@@ -66,7 +68,7 @@ func (s *HTTPServer) Shutdown(ctx context.Context) {
 	}
 }
 
-func newGatewayHandler(cfg *config, logger zerolog.Logger) (http.Handler, error) {
+func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler, error) {
 	// initialize middleware common to all handlers
 	var mw []middleware.Middleware
 	mw = append(mw,
@@ -74,6 +76,9 @@ func newGatewayHandler(cfg *config, logger zerolog.Logger) (http.Handler, error)
 		middleware.NewRecoverHandler(),
 	)
 	mw = append(mw, middleware.NewContextLog(logger)...)
+	// we measure response time only for all handlers
+	mc := middleware.NewMetricsConfig().WithTimeHist(responseTimeHistogram)
+	mw = append(mw, middleware.NewMetricsHandler(mc))
 
 	router := mux.NewRouter()
 	for _, url := range cfg.URLs {

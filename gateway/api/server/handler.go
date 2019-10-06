@@ -11,20 +11,21 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/gateway/api"
+	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 )
 
-func newHandler(u URL, logger zerolog.Logger) (http.Handler, error) {
-	p, err := u.protocol()
+func newHandler(u config.URL, logger zerolog.Logger) (http.Handler, error) {
+	p, err := u.Protocol()
 	if err != nil {
 		return nil, err
 	}
 	switch p {
-	case NSQ:
+	case config.NSQ:
 		return newNSQHandler(u)
-	case HTTP:
+	case config.HTTP:
 		// in a real world scenario we would factor this out to perform more
 		// sofisticated operations like reqriting headers for https requests etc.
 		return httputil.NewSingleHostReverseProxy(&url.URL{
@@ -49,7 +50,7 @@ type nsqHandler struct {
 
 // NOTE: throttling is not enabled for producers which should be done in a
 // production environment.
-func newNSQHandler(u URL) (*nsqHandler, error) {
+func newNSQHandler(u config.URL) (*nsqHandler, error) {
 	cfg := nsq.NewConfig()
 	cfg.UserAgent = fmt.Sprintf("go-nsq/%s", nsq.VERSION)
 	producers := make(map[string]*nsq.Producer)
