@@ -1,8 +1,10 @@
-package server
+package config
 
 import (
+	"bytes"
 	"errors"
-	"io/ioutil"
+	"io"
+	"os"
 
 	yaml "gopkg.in/yaml.v2"
 )
@@ -31,7 +33,7 @@ type URL struct {
 	} `yaml:"http"`
 }
 
-func (u URL) protocol() (protocol, error) {
+func (u URL) Protocol() (protocol, error) {
 	if u.NSQ.Topic != "" {
 		return NSQ, nil
 	} else if u.HTTP.Host != "" {
@@ -42,19 +44,28 @@ func (u URL) protocol() (protocol, error) {
 
 // config represents a server configuration read from a YAML file.
 // NOTE: The configuration does not get validated or sanitized.
-type config struct {
+type Config struct {
 	URLs []URL `yaml:"urls"`
 }
 
-// LoadConfig loads the YAML config file.
-// Note: the configuration is not checked for validity.
-func LoadConfig(path string) (*config, error) {
-	yamlFile, err := ioutil.ReadFile(path)
+func FromFile(cfgpath string) (*Config, error) {
+	f, err := os.Open(cfgpath)
 	if err != nil {
 		return nil, err
 	}
-	c := &config{}
-	err = yaml.Unmarshal(yamlFile, c)
+	return load(f)
+}
+
+// load loads configuration from an io.Reader.
+// Note: the configuration is not checked for validity.
+func load(in io.Reader) (*Config, error) {
+	buf := new(bytes.Buffer)
+	_, err := buf.ReadFrom(in)
+	if err != nil {
+		return nil, err
+	}
+	c := &Config{}
+	err = yaml.Unmarshal(buf.Bytes(), c)
 	if err != nil {
 		return nil, err
 	}
