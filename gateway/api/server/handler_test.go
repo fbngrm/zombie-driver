@@ -112,7 +112,7 @@ var proxytest = handlertest{
 		proxyreq{
 			d: "expect StatusBadGateway when failing to reach the backend",
 			p: "/drivers",
-			i: "2", // -1 tests hijacked requests
+			i: "2", // 2 test hijacked requests
 			m: "PATCH",
 			s: http.StatusBadGateway,
 			h: map[string]string{"Authorization": "Bearer AUTH_TOKEN"}, // don't do this
@@ -130,7 +130,7 @@ func TestProxy(t *testing.T) {
 	backendResponse := "I am the backend"
 
 	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// we use URL path to test hijacked requests/unreachable backend
+		// we use user ID to test hijacked requests/unreachable backend
 		segments := strings.Split(r.URL.Path, "/")
 		if len(segments) != 3 {
 			t.Fatalf("expect 3 path segments but got %d", len(segments))
@@ -141,8 +141,7 @@ func TestProxy(t *testing.T) {
 			c.Close()
 			return
 		}
-		// we ignore Transfer-Encoding hop-by-hop header; expecting chunked to
-		// be applied if required
+		// we ignore other hop-by-hop headers for now
 		if r.Header.Get("X-Forwarded-For") == "" {
 			t.Errorf("%s: didn't get X-Forwarded-For header", proxytest.d)
 			w.WriteHeader(http.StatusBadRequest)
