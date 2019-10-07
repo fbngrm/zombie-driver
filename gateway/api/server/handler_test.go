@@ -2,9 +2,9 @@ package server
 
 import (
 	"io/ioutil"
-	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
@@ -65,7 +65,7 @@ var proxytest = handlertest{
 				HTTP: struct {
 					Host string `yaml:"host"`
 				}{
-					Host: "127.0.0.1:38995", // set to localhost for default httptest.Server
+					Host: "", // will be overwritten by test server host and port
 				},
 			},
 		},
@@ -100,29 +100,28 @@ var proxytest = handlertest{
 func TestProxy(t *testing.T) {
 	// create a target for the reverse proxy
 	backendResponse := "I am the backend"
-
-	// we create a custom listener since we want to use the test config
-	host := proxytest.c.URLs[0].HTTP.Host
-	l, err := net.Listen("tcp", host)
-	if err != nil {
-		// FIXME: handle IPv6 retry
-		t.Fatalf("httptest: failed to listen on %s: %v", host, err)
-	}
-	backend := &httptest.Server{
-		Listener: l,
-		Config: &http.Server{
-			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte(backendResponse))
-			})},
-	}
-	backend.Start()
+	backend := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(backendResponse))
+	}))
 	defer backend.Close()
 
+	// NOTE: we need to overwrite the URL Host in the test config here, which
+	// is not a desired behaviour normally. The httptest.Server uses a local
+	// Listener initialized to listen on a random port. Using a custom Listener
+	// and providing a port would require supporting `serveFlag` and IPv6.
+	// For more info see:
+	// https://golang.org/src/net/http/httptest/server.go?s=477:1449#L72
+	u, err := url.Parse(backend.URL)
+	if err != nil {
+		t.Fatalf("%s: unexpected error: %v", proxytest.d, err)
+	}
+	proxytest.c.URLs[0].HTTP.Host = u.Host
 	// create the proxy handler to test
 	h, err := newGatewayHandler(&proxytest.c, zerolog.New(ioutil.Discard))
 	if err != nil {
 		t.Fatalf("%s: unexpected error: %v", proxytest.d, err)
 	}
+
 	frontend := httptest.NewServer(h)
 	defer frontend.Close()
 	frontendClient := frontend.Client()
