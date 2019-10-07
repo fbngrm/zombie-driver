@@ -21,6 +21,7 @@ func (p protocol) String() string {
 	return [...]string{"_", "NSQ", "HTTP"}[p]
 }
 
+// Does not support query params.
 type URL struct {
 	Path   string `yaml:"path"`
 	Method string `yaml:"method"`

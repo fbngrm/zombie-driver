@@ -53,7 +53,8 @@ func newHandler(u config.URL, logger zerolog.Logger) (http.Handler, error) {
 		return newNSQHandler(u)
 	case config.HTTP:
 		// in a real world scenario we would factor this out to perform more
-		// sofisticated operations like reqriting headers for https requests etc.
+		// sofisticated operations like rewriting headers for https requests etc.
+		// returns http.StatusBadGateway if backend is not reachable.
 		return httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
 			Host:   u.HTTP.Host,
