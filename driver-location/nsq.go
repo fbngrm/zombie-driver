@@ -6,10 +6,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/heetch/FabianG-technical-test/driver-location/server"
 	nsq "github.com/nsqio/go-nsq"
 )
 
@@ -21,22 +23,11 @@ var (
 	channel          = "loc-chan"
 	numPublihsers    = 100
 	maxInflight      = 250
+	updateInteval    = 5 // seconds between location updates
 )
 
-type Location struct {
-	ID   string  `json:"id"`
-	Lat  float32 `json:"latitude"`
-	Long float32 `json:"longitude"`
-}
-
-type LocationUpdate struct {
-	UpdatedAt string  `json:"updated_at"`
-	Lat       float32 `json:"latitude"`
-	Long      float32 `json:"longitude"`
-}
-
 type Publisher interface {
-	Publish(k, v string) error
+	Publish(timestamp int64, key, value string) error
 }
 
 type PublishHandler struct {
@@ -44,15 +35,16 @@ type PublishHandler struct {
 }
 
 func (ph *PublishHandler) HandleMessage(m *nsq.Message) error {
-	var l Location
+	var l server.Location
 	// marshal instead of decode since we expect a single JSON string
 	// only not a stream or additional data
 	err := json.Unmarshal(m.Body, &l)
 	if err != nil {
 		return err
 	}
-	loc := LocationUpdate{
-		UpdatedAt: time.Now().UTC().Format(time.RFC3339),
+	t := time.Now()
+	loc := server.LocationUpdate{
+		UpdatedAt: t.UTC().Format(time.RFC3339),
 		Lat:       l.Lat,
 		Long:      l.Long,
 	}
@@ -60,26 +52,39 @@ func (ph *PublishHandler) HandleMessage(m *nsq.Message) error {
 	if err != nil {
 		return err
 	}
-	return ph.Publish(l.ID, string(b))
+	return ph.Publish(t.Unix(), l.ID, string(b))
 }
 
 type RedisPublisher struct {
 	c *redis.Client
 }
 
-func (r *RedisPublisher) Publish(k, v string) error {
-	err := r.c.LPush(k, v).Err()
+func (r *RedisPublisher) Publish(timestamp int64, key, value string) error {
+	member := redis.Z{
+		Score:  float64(timestamp),
+		Member: value,
+	}
+	// O(log(N)) for each item added, where N is the number of elements in the sorted set.
+	fmt.Printf("add %+v ", member)
+	err := r.c.ZAddNX(key, &member).Err()
 	if err != nil {
 		return err
 	}
-	_, err = r.GetLocations(k, 10)
-	if err != nil {
-		return err
+
+	time.Sleep(2 * time.Second)
+	minutes := 5
+	t := time.Now()
+	min := t.Add(-1 * time.Duration(minutes) * time.Minute).Unix()
+	opt := redis.ZRangeBy{
+		Min: strconv.FormatInt(min, 10),
+		Max: strconv.FormatInt(t.Unix(), 10),
 	}
+	locations := r.c.ZRangeByScore(key, &opt)
+	fmt.Println(locations)
 	return nil
 }
 
-func (r *RedisPublisher) GetLocations(id string, count int64) ([]LocationUpdate, error) {
+func (r *RedisPublisher) GetLocations(id string, count int64) ([]server.LocationUpdate, error) {
 	locs, err := r.c.LRange(id, 0, count).Result()
 	if err == redis.Nil {
 		fmt.Println("key does not exist")
