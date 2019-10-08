@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
+	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/metrics"
 	"github.com/rs/zerolog"
 )
@@ -44,7 +45,7 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
 
 	<-ctx.Done()
 
-	server.HealthCheckShutDown()
+	handler.HealthCheckShutDown()
 
 	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

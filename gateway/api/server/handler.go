@@ -13,6 +13,7 @@ import (
 	"github.com/heetch/FabianG-technical-test/gateway/api"
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	"github.com/heetch/FabianG-technical-test/gateway/api/middleware"
+	"github.com/heetch/FabianG-technical-test/handler"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
@@ -39,7 +40,7 @@ func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler,
 		// NOTE: relies on valid URL configuration
 		router.Handle(url.Path, middleware.Use(h, mw...)).Methods(url.Method)
 	}
-	router.Handle("/ready", &readinessHandler{})
+	router.Handle("/ready", &handler.ReadinessHandler{})
 	return router, nil
 }
 
@@ -65,12 +66,6 @@ func newHandler(u config.URL, logger zerolog.Logger) (http.Handler, error) {
 	default:
 		return nil, fmt.Errorf("no handler found for %s", p)
 	}
-}
-
-type readinessHandler struct{}
-
-func (h *readinessHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(health())
 }
 
 type nsqHandler struct {
