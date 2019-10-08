@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
+	"github.com/heetch/FabianG-technical-test/metrics"
 	"github.com/rs/zerolog"
 )
 
@@ -26,7 +27,7 @@ func NewLogger() zerolog.Logger {
 	return logger
 }
 
-func RunServer(httpSrv *server.HTTPServer, metricsSrv *server.MetricsServer) {
+func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 

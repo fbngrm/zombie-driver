@@ -7,6 +7,7 @@ import (
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
 	"github.com/heetch/FabianG-technical-test/gateway/cmd/gateway/cli"
+	"github.com/heetch/FabianG-technical-test/metrics"
 )
 
 func main() {
@@ -21,6 +22,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
 		os.Exit(2)
 	}
-	metricsSrv := server.NewMetrics(9102, log)
+	metricsSrv := metrics.NewMetrics(9102, log)
 	cli.RunServer(httpSrv, metricsSrv)
 }
