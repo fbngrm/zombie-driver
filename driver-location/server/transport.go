@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/heetch/FabianG-technical-test/gateway/api/middleware"
 	"github.com/heetch/FabianG-technical-test/handler"
+	"github.com/heetch/FabianG-technical-test/middleware"
 	"github.com/rs/zerolog"
 )
 

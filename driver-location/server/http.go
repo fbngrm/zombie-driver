@@ -16,7 +16,7 @@ var (
 	authtoken             = "AUTH_TOKEN"
 	responseTimeHistogram = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name:    "driver-location_response_time",
+			Name:    "driver_location_response_time",
 			Help:    "histogram of response times for driver-location http handler",
 			Buckets: prometheus.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
 		},
