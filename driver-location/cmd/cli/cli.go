@@ -22,13 +22,13 @@ var shutdownDelay = 1
 // is a coding challenge. In a production environment we would prefer structured,
 // machine parsable format. So we could make use of automated log analysis e.g.
 // error reporting.
-func NewLogger() zerolog.Logger {
+func NewLogger(service string) zerolog.Logger {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	// replace standard log
 	log.SetFlags(0)
 	log.SetOutput(logger)
-	return logger
+	return logger.With().Interface("service", service).Logger()
 }
 
 func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, nsqConsumer *consumer.NSQ) {

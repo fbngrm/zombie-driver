@@ -26,7 +26,7 @@ var (
 )
 
 func main() {
-	logger := cli.NewLogger()
+	logger := cli.NewLogger(service)
 
 	httpSrv, err := server.New(httpAddr, redisAddr, logger)
 	if err != nil {
@@ -34,7 +34,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	metricsSrv := metrics.NewMetrics(metricsAddr, service, logger)
+	metricsSrv := metrics.NewMetrics(metricsAddr, logger)
 
 	cfg := nsq.NewConfig()
 	cfg.MaxInFlight = maxInflight

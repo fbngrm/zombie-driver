@@ -2,7 +2,6 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -12,14 +11,14 @@ import (
 )
 
 type MetricsServer struct {
-	srv *http.Server
-	cnt uint64
-	log zerolog.Logger
+	cnt    uint64
+	srv    *http.Server
+	logger zerolog.Logger
 }
 
-func NewMetrics(port int, log zerolog.Logger) *MetricsServer {
+func NewMetrics(addr string, logger zerolog.Logger) *MetricsServer {
 	ms := &MetricsServer{
-		log: log,
+		logger: logger,
 	}
 	promHandler := promhttp.Handler()
 	cntHandler := http.HandlerFunc(
@@ -30,21 +29,21 @@ func NewMetrics(port int, log zerolog.Logger) *MetricsServer {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", cntHandler)
 	ms.srv = &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    addr,
 		Handler: mux,
 	}
 	return ms
 }
 
 func (ms *MetricsServer) Run() {
-	ms.log.Info().Msgf("listening on %s", ms.srv.Addr)
+	ms.logger.Info().Msgf("metrics server listening on %s", ms.srv.Addr)
 	if err := ms.srv.ListenAndServe(); err != http.ErrServerClosed {
-		ms.log.Fatal().Err(err).Msg("metrics server exited with error")
+		ms.logger.Fatal().Err(err).Msg("metrics server exited with error")
 	}
 }
 
 func (ms *MetricsServer) Shutdown(ctx context.Context) {
-	ms.log.Info().Msg("waiting for metrics to be scraped")
+	ms.logger.Info().Msg("waiting for metrics to be scraped")
 
 	// we're getting the current count of accesses to /metrics and waiting for
 	// it to increase, i.e. we're waiting till prometheus will scrape the final
@@ -64,8 +63,8 @@ LOOP:
 		}
 	}
 	t.Stop()
-	ms.log.Info().Msg("shutting metrics server down")
+	ms.logger.Info().Msg("shutting metrics server down")
 	if err := ms.srv.Shutdown(ctx); err != nil {
-		ms.log.Error().Err(err).Msg("metrics server shutdown error")
+		ms.logger.Error().Err(err).Msg("metrics server shutdown error")
 	}
 }

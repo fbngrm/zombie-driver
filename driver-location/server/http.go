@@ -48,18 +48,18 @@ func New(httpAddr, redisAddr string, logger zerolog.Logger) (*HTTPServer, error)
 }
 
 func (s *HTTPServer) Run() {
-	s.logger.Info().Msgf("driver-location service: listening on %s", s.server.Addr)
+	s.logger.Info().Msgf("http server listening on %s", s.server.Addr)
 	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
-		s.logger.Fatal().Err(err).Msg("driver-location: http server exited with error")
+		s.logger.Fatal().Err(err).Msg("http server exited with error")
 	}
 }
 
 func (s *HTTPServer) Shutdown(ctx context.Context) {
-	s.logger.Info().Msg("driver-location: shutting down HTTP server")
+	s.logger.Info().Msg("shutting down http server")
 
 	// this stops accepting new requests and waits for the running ones to
 	// finish before returning. See net/http docs for details.
 	if err := s.server.Shutdown(ctx); err != nil {
-		s.logger.Error().Err(err).Msg("driver-location: http server shutdown error")
+		s.logger.Error().Err(err).Msg("http server shutdown error")
 	}
 }

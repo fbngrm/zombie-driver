@@ -49,14 +49,14 @@ func New(addr string, cfg *config.Config, logger zerolog.Logger) (*HTTPServer, e
 }
 
 func (s *HTTPServer) Run() {
-	s.logger.Info().Msgf("listening on %s", s.server.Addr)
+	s.logger.Info().Msgf("http server listening on %s", s.server.Addr)
 	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
 		s.logger.Fatal().Err(err).Msg("http server exited with error")
 	}
 }
 
 func (s *HTTPServer) Shutdown(ctx context.Context) {
-	s.logger.Info().Msg("shutting down HTTP server down")
+	s.logger.Info().Msg("shutting down http server down")
 
 	// this stops accepting new requests and waits for the running ones to
 	// finish before returning. See net/http docs for details.
