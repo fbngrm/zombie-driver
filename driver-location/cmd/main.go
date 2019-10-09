@@ -34,7 +34,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	metricsSrv := metrics.NewMetrics(metricsAddr, logger)
+	metricsSrv := metrics.New(metricsAddr, logger)
 
 	cfg := nsq.NewConfig()
 	cfg.MaxInFlight = maxInflight

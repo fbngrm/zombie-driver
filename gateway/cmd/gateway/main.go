@@ -28,6 +28,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", service, err)
 		os.Exit(2)
 	}
-	metricsSrv := metrics.NewMetrics(metricsAddr, logger)
+	metricsSrv := metrics.New(metricsAddr, logger)
 	cli.RunServer(httpSrv, metricsSrv)
 }

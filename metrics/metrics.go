@@ -16,7 +16,7 @@ type MetricsServer struct {
 	logger zerolog.Logger
 }
 
-func NewMetrics(addr string, logger zerolog.Logger) *MetricsServer {
+func New(addr string, logger zerolog.Logger) *MetricsServer {
 	ms := &MetricsServer{
 		logger: logger,
 	}
