@@ -1,9 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/handler"
@@ -44,6 +47,7 @@ type zombieHandler struct {
 
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
+	// fetch location updates from location service
 	request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id), nil)
 	if err != nil {
 		// do not expose error details, not even for internal endpoints
@@ -60,10 +64,49 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		// do not expose error details, not even for internal endpoints
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(string(data))
-	w.WriteHeader(http.StatusOK)
+	// we rely on locations being sorted by update time
+	// TODO: check order
+	var locs []LocationUpdate
+	err = json.Unmarshal(data, &locs)
+	if err != nil {
+		handler.WriteError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	var dist float64
+	for i := 0; i < len(locs)-1; i++ {
+		dist += haversineKm(locs[i].Lat, locs[i].Long, locs[i+1].Lat, locs[i+1].Long)
+	}
+	driverId, err := strconv.ParseInt(id, 10, 32)
+	if err != nil {
+		handler.WriteError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	zombie := ZombieDriver{
+		ID:     driverId,
+		Zombie: dist < 500.0,
+	}
+	handler.EncodeJSON(w, r, zombie, http.StatusOK)
+}
+
+var degreesToRadians = math.Pi / 180.0
+
+// calculate haversine distance for linear distance
+func haversineKm(lat1, long1, lat2, long2 float64) float64 {
+	earthRadiusKm := 6367.0
+
+	dlong := (long2 - long1) * degreesToRadians
+	dlat := (lat2 - lat1) * degreesToRadians
+
+	lat1 = lat1 * degreesToRadians
+	lat2 = lat2 * degreesToRadians
+
+	a := math.Pow(math.Sin(dlat/2.0), 2) +
+		math.Pow(math.Sin(dlong/2.0), 2)*math.Cos(lat1)*math.Cos(lat2)
+
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+
+	return earthRadiusKm * c
 }
