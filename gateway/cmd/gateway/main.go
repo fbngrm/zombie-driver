@@ -22,12 +22,12 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", service, err)
 		os.Exit(2)
 	}
-	log := cli.NewLogger()
-	httpSrv, err := server.New(httpAddr, cfg, log)
+	logger := cli.NewLogger()
+	httpSrv, err := server.New(httpAddr, cfg, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", service, err)
 		os.Exit(2)
 	}
-	metricsSrv := metrics.NewMetrics(metricsAddr, log)
+	metricsSrv := metrics.NewMetrics(metricsAddr, service, logger)
 	cli.RunServer(httpSrv, metricsSrv)
 }
