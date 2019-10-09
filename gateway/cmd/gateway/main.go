@@ -12,8 +12,8 @@ import (
 
 var (
 	service     = "gateway"
-	httpAddr    = ":8081"
-	metricsAddr = ":9103"
+	httpAddr    = ":8080"
+	metricsAddr = ":9102"
 )
 
 func main() {
