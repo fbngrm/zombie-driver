@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
@@ -34,13 +33,13 @@ type HTTPServer struct {
 	logger zerolog.Logger
 }
 
-func New(port int, cfg *config.Config, logger zerolog.Logger) (*HTTPServer, error) {
+func New(addr string, cfg *config.Config, logger zerolog.Logger) (*HTTPServer, error) {
 	router, err := newGatewayHandler(cfg, logger)
 	if err != nil {
 		return nil, err
 	}
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    addr,
 		Handler: router,
 	}
 	return &HTTPServer{

@@ -10,18 +10,24 @@ import (
 	"github.com/heetch/FabianG-technical-test/metrics"
 )
 
+var (
+	service     = "gateway"
+	httpAddr    = ":8081"
+	metricsAddr = ":9103"
+)
+
 func main() {
 	cfg, err := config.FromFile("./config.yaml")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
+		fmt.Fprintf(os.Stderr, "%s: %v\n", service, err)
 		os.Exit(2)
 	}
 	log := cli.NewLogger()
-	httpSrv, err := server.New(8080, cfg, log)
+	httpSrv, err := server.New(httpAddr, cfg, log)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "gateway: %v\n", err)
+		fmt.Fprintf(os.Stderr, "%s: %v\n", service, err)
 		os.Exit(2)
 	}
-	metricsSrv := metrics.NewMetrics(9102, log)
+	metricsSrv := metrics.NewMetrics(metricsAddr, log)
 	cli.RunServer(httpSrv, metricsSrv)
 }
