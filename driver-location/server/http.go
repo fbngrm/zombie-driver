@@ -55,7 +55,7 @@ func (s *HTTPServer) Run() {
 }
 
 func (s *HTTPServer) Shutdown(ctx context.Context) {
-	s.logger.Info().Msg("driver-location: shutting down HTTP server down")
+	s.logger.Info().Msg("driver-location: shutting down HTTP server")
 
 	// this stops accepting new requests and waits for the running ones to
 	// finish before returning. See net/http docs for details.

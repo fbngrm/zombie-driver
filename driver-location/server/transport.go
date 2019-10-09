@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -55,9 +55,19 @@ func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Max: strconv.FormatInt(t.Unix(), 10),
 	}
 	locations := l.c.ZRangeByScore(id, &opt)
-	fmt.Println(locations)
 	if err := locations.Err(); err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
+		return
 	}
-	handler.EncodeJSON(w, r, locations.Val(), 200)
+	var locs []LocationUpdate
+	for _, s := range locations.Val() {
+		var l LocationUpdate
+		err = json.Unmarshal([]byte(s), &l)
+		if err != nil {
+			handler.WriteError(w, r, err, http.StatusInternalServerError)
+			return
+		}
+		locs = append(locs, l)
+	}
+	handler.EncodeJSON(w, r, locs, 200)
 }
