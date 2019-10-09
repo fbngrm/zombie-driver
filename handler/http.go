@@ -35,11 +35,11 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error, code int) {
 	} else {
 		logger.Debug().Msg("http error")
 	}
-	encodeJSON(w, r, &Error{Err: err.Error()}, code)
+	EncodeJSON(w, r, &Error{Err: err.Error()}, code)
 }
 
-// encodeJSON encodes v to w in JSON format.
-func encodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status int) {
+// EncodeJSON encodes v to w in JSON format.
+func EncodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
