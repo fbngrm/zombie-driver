@@ -38,7 +38,7 @@ func newLocationHandler(redisAddr string, logger zerolog.Logger) (http.Handler, 
 // underlying connections. It's safe for concurrent use by multiple
 // goroutines.
 type locationHandler struct {
-	c *redis.Client // thread safe
+	c *redis.Client
 }
 
 func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
