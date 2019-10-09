@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,13 +32,13 @@ type HTTPServer struct {
 	logger zerolog.Logger
 }
 
-func New(port int, logger zerolog.Logger) (*HTTPServer, error) {
-	router, err := newLocationHandler(logger)
+func New(httpAddr, redisAddr string, logger zerolog.Logger) (*HTTPServer, error) {
+	router, err := newLocationHandler(redisAddr, logger)
 	if err != nil {
 		return nil, err
 	}
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    httpAddr,
 		Handler: router,
 	}
 	return &HTTPServer{
@@ -49,7 +48,7 @@ func New(port int, logger zerolog.Logger) (*HTTPServer, error) {
 }
 
 func (s *HTTPServer) Run() {
-	s.logger.Info().Msgf("driver-location: listening on %s", s.server.Addr)
+	s.logger.Info().Msgf("driver-location service: listening on %s", s.server.Addr)
 	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
 		s.logger.Fatal().Err(err).Msg("driver-location: http server exited with error")
 	}

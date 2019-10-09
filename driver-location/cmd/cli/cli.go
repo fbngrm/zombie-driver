@@ -8,11 +8,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/heetch/FabianG-technical-test/driver-location/consumer"
 	"github.com/heetch/FabianG-technical-test/driver-location/server"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/metrics"
 	"github.com/rs/zerolog"
 )
+
+var shutdownDelay = 1
 
 // Using default log level debug and write to stderr.
 // Note: We log in (inefficient) human friendly format to console here since it
@@ -28,7 +31,7 @@ func NewLogger() zerolog.Logger {
 	return logger
 }
 
-func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
+func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, nsqConsumer *consumer.NSQ) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -42,12 +45,13 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
 
 	go httpSrv.Run()
 	go metricsSrv.Run()
+	go nsqConsumer.Run()
 
 	<-ctx.Done()
 
 	handler.HealthCheckShutDown()
 
-	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(shutdownDelay)*time.Second)
 	defer cancel()
 
 	// when shutting down, we first gracefully shutting down the main http
@@ -56,4 +60,5 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
 	// prometheus to scrape the metrics one more time, to avoid loosing any data.
 	httpSrv.Shutdown(ctx)
 	metricsSrv.Shutdown(ctx)
+	nsqConsumer.Shutdown()
 }
