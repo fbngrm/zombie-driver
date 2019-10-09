@@ -20,7 +20,7 @@ var (
 // WriteError writes an error to the http response in JSON format.
 func WriteError(w http.ResponseWriter, r *http.Request, err error, code int) {
 	// Prepare log.
-	logger := loggerFromRequest(r).With().
+	logger := LoggerFromRequest(r).With().
 		Err(err).
 		Int("status", code).
 		Logger()
@@ -41,7 +41,7 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error, code int) {
 // EncodeJSON encodes v to w in JSON format.
 func EncodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status int) {
 	if err := json.NewEncoder(w).Encode(v); err != nil {
-		loggerFromRequest(r).Error().Err(err).Interface("value", v).Msg("failed to encode value to http response")
+		LoggerFromRequest(r).Error().Err(err).Interface("value", v).Msg("failed to encode value to http response")
 		w.WriteHeader(http.StatusInternalServerError)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
@@ -49,7 +49,7 @@ func EncodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status in
 	}
 }
 
-func loggerFromRequest(r *http.Request) *zerolog.Logger {
+func LoggerFromRequest(r *http.Request) *zerolog.Logger {
 	logger := hlog.FromRequest(r).With().
 		Str("method", r.Method).
 		Str("url", r.URL.String()).
