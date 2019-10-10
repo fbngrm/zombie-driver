@@ -37,9 +37,6 @@ func newZombieHandler(driverLocationURL string, logger zerolog.Logger) (http.Han
 	return router, nil
 }
 
-// Client is a Redis client representing a pool of zero or more
-// underlying connections. It's safe for concurrent use by multiple
-// goroutines.
 type zombieHandler struct {
 	client *http.Client
 	url    string
@@ -95,7 +92,7 @@ var degreesToRadians = math.Pi / 180.0
 
 // calculate haversine distance for linear distance
 func haversineKm(lat1, long1, lat2, long2 float64) float64 {
-	earthRadiusKm := 6367.0
+	earthRadiusKm := 6371.0
 
 	dlong := (long2 - long1) * degreesToRadians
 	dlat := (lat2 - lat1) * degreesToRadians
