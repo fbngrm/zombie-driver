@@ -64,6 +64,11 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+	// user or URL not found
+	if len(data) == 0 || response.StatusCode == http.StatusNotFound {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	// we rely on locations being sorted by update time
 	// TODO: check order
 	var locs []LocationUpdate
