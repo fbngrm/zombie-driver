@@ -12,6 +12,8 @@ import (
 )
 
 var (
+	version = "unkown"
+
 	service     = "driver-location"
 	httpAddr    = ":8081"
 	redisAddr   = ":6379"

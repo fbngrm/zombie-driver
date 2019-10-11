@@ -11,6 +11,7 @@ import (
 )
 
 var (
+	version     = "unknown"
 	service     = "gateway"
 	httpAddr    = ":8080"
 	metricsAddr = ":9102"

@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	version           = "unkown"
 	service           = "zombie-driver"
 	httpAddr          = ":8082"
 	metricsAddr       = ":9104"
