@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/heetch/FabianG-technical-test/metrics"
-	"github.com/heetch/FabianG-technical-test/zombie-driver/cmd/cli"
+	"github.com/heetch/FabianG-technical-test/zombie-driver/cmd/zombie-driver/cli"
 	"github.com/heetch/FabianG-technical-test/zombie-driver/server"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/heetch/FabianG-technical-test/driver-location/cmd/cli"
+	"github.com/heetch/FabianG-technical-test/driver-location/cmd/driver-location/cli"
 	"github.com/heetch/FabianG-technical-test/driver-location/consumer"
 	"github.com/heetch/FabianG-technical-test/driver-location/server"
 	"github.com/heetch/FabianG-technical-test/metrics"
