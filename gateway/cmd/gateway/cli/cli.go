@@ -19,16 +19,19 @@ import (
 // is a coding challenge. In a production environment we would prefer structured,
 // machine parsable format. So we could make use of automated log analysis e.g.
 // error reporting.
-func NewLogger(service string) zerolog.Logger {
+func NewLogger(service, version string) zerolog.Logger {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	// replace standard log
 	log.SetFlags(0)
 	log.SetOutput(logger)
-	return logger.With().Interface("service", service).Logger()
+	return logger.With().
+		Interface("service", service).
+		Interface("version", version).
+		Logger()
 }
 
-func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
+func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, shutdownDelay int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -47,7 +50,7 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
 
 	handler.HealthCheckShutDown()
 
-	ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(shutdownDelay)*time.Millisecond)
 	defer cancel()
 
 	// when shutting down, we first gracefully shutting down the main http
