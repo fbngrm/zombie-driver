@@ -1,7 +1,26 @@
-.PHONY: all test
+.PHONY: all build test test-race test-cover lint
 
-all:
-	# Write your build command(s) here
+all: build
+	. secrets/.env-test && ./bin/gateway
+
+build:
+	mkdir -p bin
+	go build -o bin/gateway \
+        -ldflags "-X main.version=$${VERSION:-$$(git describe --tags --always --dirty)}" \
+        ./cmd/gateway/main.go
 
 test:
-	# Write your test command(s) here
+	. secrets/.env-test && go test ./...
+
+test-race:
+	. secrets/.env-test && go test -race -cover ./...
+
+test-cover:
+	rm -f all.coverage.out
+	. secrets/.env-test  && go test -race -coverprofile=all.coverage.out -coverpkg=./... $$(go list ./...|grep -v cmd)
+
+lint:
+	docker pull golangci/golangci-lint:latest
+	docker run -v`pwd`:/workspace -w /workspace \
+        golangci/golangci-lint:latest golangci-lint run ./...
+
