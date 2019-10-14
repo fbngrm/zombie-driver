@@ -15,7 +15,7 @@ services:
 
   nsqd:
     image: nsqio/nsq:v0.3.8
-    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=127.0.0.1
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=${HOST_NAME}
     links:
       - nsqlookupd:nsqlookupd
     ports:
