@@ -10,4 +10,4 @@ urls:
     path: "/drivers/{id:[0-9]+}"
     method: "GET"
     http:
-      host: "zombie-driver"
+      host: "127.0.0.1:8082"
