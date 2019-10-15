@@ -46,7 +46,9 @@ type zombieHandler struct {
 
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	// fetch location updates from location service
+	// fetch location updates from location service; if there are no location
+	// updates available for the driver ID, we assume it's a zombie. we do not
+	// distinguish between non-existing drivers and zombies.
 	request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id), nil)
 	if err != nil {
 		// do not expose error details, not even for internal endpoints
