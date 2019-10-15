@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func newZombieHandler(driverLocationURL string, logger zerolog.Logger) (http.Handler, error) {
+func newZombieHandler(driverLocationURL string, zombieRadius float64, logger zerolog.Logger) (http.Handler, error) {
 	// initialize middleware common to all handlers
 	var mw []middleware.Middleware
 	mw = append(mw,
@@ -27,8 +27,9 @@ func newZombieHandler(driverLocationURL string, logger zerolog.Logger) (http.Han
 	mw = append(mw, middleware.NewMetricsHandler(mc))
 
 	lh := &zombieHandler{
-		client: &http.Client{},
-		url:    driverLocationURL,
+		client:       &http.Client{},
+		url:          driverLocationURL,
+		zombieRadius: zombieRadius,
 	}
 
 	router := mux.NewRouter()
@@ -38,8 +39,9 @@ func newZombieHandler(driverLocationURL string, logger zerolog.Logger) (http.Han
 }
 
 type zombieHandler struct {
-	client *http.Client
-	url    string
+	client       *http.Client
+	url          string
+	zombieRadius float64
 }
 
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +90,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	zombie := ZombieDriver{
 		ID:     driverId,
-		Zombie: dist < 500.0,
+		Zombie: dist < z.zombieRadius,
 	}
 	handler.EncodeJSON(w, r, zombie, http.StatusOK)
 }

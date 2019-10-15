@@ -17,6 +17,7 @@ var (
 	httpAddr          = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8082").String()
 	metricsAddr       = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9104").String()
 	driverLocationURL = kingpin.Flag("driver-location-url", "address of driver-location service").Envar("DRIVER_LOCATION_URL").Required().String()
+	zombieRadius      = kingpin.Flag("zombie-radius", "radius a zombie can move").Envar("ZOMBIE_RADIUS").Required().Float()
 )
 
 func main() {
@@ -25,7 +26,7 @@ func main() {
 
 	logger := cli.NewLogger(*service, version)
 
-	httpSrv, err := server.New(*httpAddr, *driverLocationURL, logger)
+	httpSrv, err := server.New(*httpAddr, *driverLocationURL, *zombieRadius, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s service: %v\n", *service, err)
 		os.Exit(2)

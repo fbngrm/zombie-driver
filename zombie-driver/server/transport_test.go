@@ -169,7 +169,7 @@ func TestProxy(t *testing.T) {
 
 	// create the proxy handler to test
 	driverLocationURL := driverLocationSrvc.URL + zombieTest.p
-	h, err := newZombieHandler(driverLocationURL, logger)
+	h, err := newZombieHandler(driverLocationURL, 500, logger)
 	if err != nil {
 		t.Fatalf("%s: unexpected error: %v", zombieTest.d, err)
 	}
