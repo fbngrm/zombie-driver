@@ -103,8 +103,8 @@ var zombieTest = handlerTest{
 		zombieReq{
 			d: "should accept GET only",
 			p: "/drivers",
-			i: "0", // empty response
-			m: "PATCH",
+			i: "0",     // empty response
+			m: "PATCH", // TODO: should check all HTTP verbs
 			s: http.StatusMethodNotAllowed,
 		},
 		zombieReq{
@@ -189,9 +189,6 @@ func TestProxy(t *testing.T) {
 			res, err := zombieClient.Do(req)
 			if err != nil {
 				t.Fatalf("%s: unexpected error %v", tc.d, err)
-			}
-			if w, g := tc.s, res.StatusCode; w != g {
-				t.Errorf("%s: expect status code %d got %d", tc.d, w, g)
 			}
 			if w, g := tc.s, res.StatusCode; w != g {
 				t.Errorf("%s: expect status code %d got %d", tc.d, w, g)
