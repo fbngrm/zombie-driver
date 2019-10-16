@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"path"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -26,88 +26,79 @@ func TestHaversine(t *testing.T) {
 	}
 }
 
-type zombieReq struct {
-	d string // description of test case
-	p string // URL path of test requests
-	m string // HTTP method of test requests
-	i string // driver id
-	s int    // expected response status code
-	r string // expected response
-}
-
-type handlerTest struct {
-	d     string            // description of test
-	p     string            //path of driver location service mock
-	r     map[string]string // response payload of driver-location service
-	cases []zombieReq
-}
-
-// driver-location service response by driver ID
-var testLocations = map[string]string{
-	"0": "",
-	"1": `[
-  {
-    "latitude": 48.864193,
-    "longitude": 2.350498,
-    "updated_at": "2018-04-05T22:36:16Z"
-  },
-  {
-    "latitude": 48.863921,
-    "longitude":  2.349211,
-    "updated_at": "2018-04-05T22:36:21Z"
-  }
-]`,
-	"2": `[
-  {
-    "latitude": 48.1372,
-    "longitude": 11.5756,
-    "updated_at": "2018-04-05T22:36:16Z"
-  },
-  {
-    "latitude": 52.5186,
-    "longitude":  13.4083,
-    "updated_at": "2018-04-05T22:36:21Z"
-  }
-]`,
-}
-
-// FIXME: in a real world scenario we would never hardcode an auth token, not
-// even a test token! This should be loaded from e.g. an env file or a secret.
-// We would not check-in env files into a remote git repo. It is implemented
-// here due to time limitations during coding challenge/prototyping.
-var zombieTest = handlerTest{
-	d: "test HTTP zombie handler",
-	p: "/drivers/%s/locations?minutes=5", //path of driver location service mock
-	r: testLocations,
-	cases: []zombieReq{
-		zombieReq{
-			d: "should accept GET only",
-			p: "/drivers",
-			i: "0",     // empty response
-			m: "PATCH", // TODO: should check all HTTP verbs
-			s: http.StatusMethodNotAllowed,
+// testdata by driver ID and minutes
+var zombieTests = map[string]map[int]struct {
+	l  string  // mock response of driver-location
+	d  string  // description of test case
+	p  string  // request path
+	r  string  // expected response data
+	zr float64 // zombie radius
+	s  int     // expected response status code
+}{
+	"0": { // driver ID 0; test faulty driver-location service
+		1: { // 1 minute
+			d: "expect InternalServerError when the driver-location mock service is not reachable",
+			p: "/drivers/0",
+			r: `{"error":"internal_error"}`,
+			s: http.StatusInternalServerError,
 		},
-		zombieReq{
-			d: "expect zombie",
-			p: "/drivers",
-			i: "1", // zombie true
-			m: "GET",
-			s: http.StatusOK,
-			r: `{"id":1,"zombie":true}`,
+	},
+	"1": { // test empty results
+		1: {
+			l: "null",
+			d: "expect null response from location-service to result in StatusNotFound",
+			p: "/drivers/1",
+			s: http.StatusNotFound,
 		},
-		zombieReq{
-			d: "expect human",
-			p: "/drivers",
-			i: "2", // zombie false
-			m: "GET",
-			s: http.StatusOK,
-			r: `{"id":2,"zombie":false}`,
+	},
+	"2": { // test zombie
+		1: {
+			l:  testdata.Drives[0].Loc, // 116.51m
+			d:  "expect driver 2 to be a zombie; #1",
+			p:  "/drivers/2",
+			r:  `{"id":2,"zombie":true}`,
+			zr: 400.0,
+			s:  http.StatusOK,
 		},
-		zombieReq{
-			d: "expect StatusNotFound",
-			p: "/drivers",
-			i: "3", // user not found
-			m: "GET",
+		2: { // test zombie
+			l:  testdata.Drives[1].Loc, // 233.02m
+			d:  "expect driver 2 to be a zombie; #2",
+			p:  "/drivers/2",
+			r:  `{"id":2,"zombie":true}`,
+			zr: 400.0,
+			s:  http.StatusOK,
+		},
+		4: { // test not a zombie
+			l:  testdata.Drives[2].Loc, // 466.04m
+			d:  "expect driver 2 to not be a zombie",
+			p:  "/drivers/2",
+			r:  `{"id":2,"zombie":false}`,
+			zr: 400.0,
+			s:  http.StatusOK,
+		},
+	},
+	"3": { // test unknown ID
+		1: {
+			d: "expect StatusNotFound for unknown user",
+			p: "/drivers/404",
+			s: http.StatusNotFound,
+		},
+	},
+	"4": { // test malformatted json
+		1: {
+			l: `{"foo":"bar"`,
+			d: "expect InternalServerError for unexpected end of json error",
+			p: "/drivers/4",
+			r: `{"error":"internal_error"}`,
+			s: http.StatusInternalServerError,
+		},
+	},
+	"5": { // test wrong type of query param id
+		1: { // NOTE: type check of ID query param is performed by router only so we expect 404 instead of 500
+			l: testdata.Drives[2].Loc, // 466.04m
+			d: "expect StatusNotFound for non-int query param ID",
+			p: "/drivers/invalidIdType",
+			r: "404 page not found",
 			s: http.StatusNotFound,
 		},
 	},
@@ -118,54 +109,84 @@ func TestProxy(t *testing.T) {
 	logger := zerolog.New(ioutil.Discard)
 	log.SetFlags(0)
 	log.SetOutput(logger)
+
+	// mock backend as target for proxy
 	driverLocationSrvc := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// TODO: test URL with regex
+		// driver id
 		segments := strings.Split(r.URL.Path, "/")
 		if len(segments) != 4 {
 			t.Fatalf("expect 4 path segments but got %d", len(segments))
 			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 		id := segments[2]
-		if p, ok := zombieTest.r[id]; ok {
+
+		// backend not reachable
+		if id == "0" {
+			c, _, _ := w.(http.Hijacker).Hijack()
+			c.Close()
+			return
+		}
+
+		// minutes query param
+		minutes, ok := r.URL.Query()["minutes"]
+		if !ok {
+			t.Fatal("expect minutes query parameter")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		m, err := strconv.Atoi(minutes[0])
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+			return
+		}
+		if tt, ok := zombieTests[id][m]; ok {
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(p))
+			w.Write([]byte(tt.l))
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer driverLocationSrvc.Close()
 
-	// create the proxy handler to test
-	driverLocationURL := driverLocationSrvc.URL + zombieTest.p
-	h, err := newZombieHandler(driverLocationURL, 500, logger)
-	if err != nil {
-		t.Fatalf("%s: unexpected error: %v", zombieTest.d, err)
-	}
+	for id := range zombieTests {
+		for minutes := range zombieTests[id] {
+			tt := zombieTests[id][minutes]
 
-	zombieService := httptest.NewServer(h)
-	defer zombieService.Close()
-	zombieClient := zombieService.Client()
+			// proxy handler to test
+			driverLocationURL := driverLocationSrvc.URL + "/drivers/%s/locations?minutes=%d"
+			// we use the zombie radius and the minutes of the test data to configure the handler
+			h, err := newZombieHandler(driverLocationURL, tt.zr, minutes, logger)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-	for _, tc := range zombieTest.cases {
-		t.Run(tc.d, func(t *testing.T) {
-			req, _ := http.NewRequest(tc.m, zombieService.URL+path.Join(tc.p, tc.i), nil)
-			req.Close = true // close TCP conn after response was read
-			req.Header.Set("Connection", "close")
-			res, err := zombieClient.Do(req)
-			if err != nil {
-				t.Fatalf("%s: unexpected error %v", tc.d, err)
-			}
-			if w, g := tc.s, res.StatusCode; w != g {
-				t.Errorf("%s: expect status code %d got %d", tc.d, w, g)
-			}
-			data, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				t.Errorf("%s: failed to read response %v", tc.d, err)
-			}
-			if w, g := tc.r, strings.TrimSpace(string(data)); w != g {
-				t.Errorf("%s: expect response %s got %s", tc.d, w, g)
-			}
-		})
+			zombieService := httptest.NewServer(h)
+			defer zombieService.Close()
+			zombieClient := zombieService.Client()
+
+			t.Run(tt.d, func(t *testing.T) {
+				req, _ := http.NewRequest("GET", zombieService.URL+tt.p, nil)
+				req.Close = true
+				req.Header.Set("Connection", "close")
+				res, err := zombieClient.Do(req)
+				if err != nil {
+					t.Fatalf("unexpected error %v", err)
+				}
+
+				if w, g := tt.s, res.StatusCode; w != g {
+					t.Errorf("want status code %d got %d", w, g)
+				}
+				data, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					t.Fatalf("failed to read response %v", err)
+				}
+				if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
+					t.Errorf("want response %s got %s", w, g)
+				}
+			})
+		}
 	}
 }

@@ -27,8 +27,7 @@ func main() {
 
 	logger := cli.NewLogger(*service, version)
 
-	url := fmt.Sprintf("%s?minutes=%d", *driverLocationURL, *zombieTime)
-	httpSrv, err := server.New(*httpAddr, url, *zombieRadius, logger)
+	httpSrv, err := server.New(*httpAddr, *driverLocationURL, *zombieRadius, *zombieTime, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s service: %v\n", *service, err)
 		os.Exit(2)

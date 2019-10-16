@@ -28,8 +28,8 @@ type HTTPServer struct {
 	logger zerolog.Logger
 }
 
-func New(addr, driverLocationURL string, zombieRadius float64, logger zerolog.Logger) (*HTTPServer, error) {
-	router, err := newZombieHandler(driverLocationURL, zombieRadius, logger)
+func New(addr, driverLocationURL string, zombieRadius float64, zombieTime int, logger zerolog.Logger) (*HTTPServer, error) {
+	router, err := newZombieHandler(driverLocationURL, zombieRadius, zombieTime, logger)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func newZombieHandler(driverLocationURL string, zombieRadius float64, logger zerolog.Logger) (http.Handler, error) {
+func newZombieHandler(driverLocationURL string, zombieRadius float64, zombieTime int, logger zerolog.Logger) (http.Handler, error) {
 	var mw []middleware.Middleware
 	mw = append(mw, middleware.NewRecoverHandler())
 	mw = append(mw, middleware.NewContextLog(logger)...)
@@ -25,6 +25,7 @@ func newZombieHandler(driverLocationURL string, zombieRadius float64, logger zer
 		client:       &http.Client{},
 		url:          driverLocationURL,
 		zombieRadius: zombieRadius,
+		zombieTime:   zombieTime,
 	}
 
 	router := mux.NewRouter()
@@ -36,15 +37,19 @@ func newZombieHandler(driverLocationURL string, zombieRadius float64, logger zer
 type zombieHandler struct {
 	client       *http.Client
 	url          string
-	zombieRadius float64
+	zombieRadius float64 // meter
+	zombieTime   int     // minutes
 }
 
-// ServeHTTP fetches location updates from the drive-ocation service and 
-// determines if the given driver ID identifies a zombie. If are no locations udpates available, we do not assume the driver is a zombie. If there are updates available, the driver is considered to be a zombie if the total distance he moved during the 
+// ServeHTTP fetches location updates from the drive-ocation service and
+// determines if the given driver ID identifies a zombie. If are no locations
+// udpates available, we do not assume the driver is a zombie. If there are
+// updates available, the driver is considered to be a zombie if the total
+// distance he moved during the zombieTime is smaller than zombieRadius.
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	// fetch locations from driver-location service
-	request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id), nil)
+	request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id, z.zombieTime), nil)
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
@@ -81,6 +86,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(locs)-1; i++ {
 		dist += haversineKm(locs[i].Lat, locs[i].Long, locs[i+1].Lat, locs[i+1].Long)
 	}
+	// NOTE: type check of ID query param is performed by router only
 	driverId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
@@ -88,7 +94,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	zombie := ZombieDriver{
 		ID:     driverId,
-		Zombie: dist < z.zombieRadius,
+		Zombie: dist < (z.zombieRadius / 1000.0), // m to km
 	}
 	handler.EncodeJSON(w, r, zombie, http.StatusOK)
 }
