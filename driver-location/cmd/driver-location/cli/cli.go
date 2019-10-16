@@ -44,9 +44,9 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, ns
 		cancel()
 	}()
 
-	go httpSrv.Run()
 	go metricsSrv.Run()
 	go nsqConsumer.Run()
+	go httpSrv.Run()
 
 	<-ctx.Done()
 
@@ -60,6 +60,6 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, ns
 	// then we shut down the metrics server, which includes waiting for
 	// prometheus to scrape the metrics one more time, to avoid loosing any data.
 	httpSrv.Shutdown(ctx)
-	metricsSrv.Shutdown(ctx)
 	nsqConsumer.Shutdown()
+	metricsSrv.Shutdown(ctx)
 }
