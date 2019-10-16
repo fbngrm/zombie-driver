@@ -9,10 +9,6 @@ import (
 )
 
 var (
-	// FIXME: in a real world scenario we would never hardcode a token here!
-	// Instead it should be loaded from an encrypted env configuration. For the
-	// sake of simplicity in a coding challenge, we violate this rule.
-	authtoken             = "AUTH_TOKEN"
 	responseTimeHistogram = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "gateway_response_time",

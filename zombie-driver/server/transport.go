@@ -15,14 +15,9 @@ import (
 )
 
 func newZombieHandler(driverLocationURL string, zombieRadius float64, logger zerolog.Logger) (http.Handler, error) {
-	// initialize middleware common to all handlers
 	var mw []middleware.Middleware
-	mw = append(mw,
-		middleware.NewAuthCheck(authtoken),
-		middleware.NewRecoverHandler(),
-	)
+	mw = append(mw, middleware.NewRecoverHandler())
 	mw = append(mw, middleware.NewContextLog(logger)...)
-	// we measure response time only for all handlers
 	mc := middleware.NewMetricsConfig().WithTimeHist(responseTimeHistogram)
 	mw = append(mw, middleware.NewMetricsHandler(mc))
 
@@ -44,23 +39,24 @@ type zombieHandler struct {
 	zombieRadius float64
 }
 
+// ServeHTTP fetches location updates from the drive-ocation service and 
+// determines if the given driver ID identifies a zombie. If are no locations udpates available, we do not assume the driver is a zombie. If there are updates available, the driver is considered to be a zombie if the total distance he moved during the 
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	// fetch location updates from location service; if there are no location
-	// updates available for the driver ID, we assume it's a zombie. we do not
-	// distinguish between non-existing drivers and zombies.
+	// fetch locations from driver-location service
 	request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id), nil)
 	if err != nil {
-		// do not expose error details, not even for internal endpoints
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	// use auth header from internal request
-	request.Header.Set("Authorization", r.Header.Get("Authorization"))
 	response, err := z.client.Do(request)
 	if err != nil {
-		// do not expose error details, not even for internal endpoints
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
+		return
+	}
+	// something wrong with the URL
+	if response.StatusCode == http.StatusNotFound {
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 	data, err := ioutil.ReadAll(response.Body)
@@ -68,19 +64,19 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	// user or URL not found
-	if len(data) == 0 || response.StatusCode == http.StatusNotFound {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	// we rely on locations being sorted by update time
-	// TODO: check order
+
+	// we rely on locations being sorted by update time; either de- or ascending
 	var locs []LocationUpdate
-	err = json.Unmarshal(data, &locs)
-	if err != nil {
+	if err = json.Unmarshal(data, &locs); err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+	// no data found for the driver ID
+	if len(locs) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	var dist float64
 	for i := 0; i < len(locs)-1; i++ {
 		dist += haversineKm(locs[i].Lat, locs[i].Long, locs[i+1].Lat, locs[i+1].Long)
@@ -97,7 +93,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler.EncodeJSON(w, r, zombie, http.StatusOK)
 }
 
-var degreesToRadians = math.Pi / 180.0
+const degreesToRadians = math.Pi / 180.0
 
 // calculate haversine distance for linear distance
 func haversineKm(lat1, long1, lat2, long2 float64) float64 {

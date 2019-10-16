@@ -27,13 +27,12 @@ func TestHaversine(t *testing.T) {
 }
 
 type zombieReq struct {
-	d string            // description of test case
-	p string            // URL path of test requests
-	m string            // HTTP method of test requests
-	i string            // driver id
-	h map[string]string // header of test request
-	s int               // expected response status code
-	r string            // expected response
+	d string // description of test case
+	p string // URL path of test requests
+	m string // HTTP method of test requests
+	i string // driver id
+	s int    // expected response status code
+	r string // expected response
 }
 
 type handlerTest struct {
@@ -89,20 +88,11 @@ var zombieTest = handlerTest{
 			s: http.StatusMethodNotAllowed,
 		},
 		zombieReq{
-			d: "expect missing auth header",
-			p: "/drivers",
-			i: "0", // empty response
-			m: "GET",
-			s: http.StatusForbidden,
-			r: "Authentication is required",
-		},
-		zombieReq{
 			d: "expect zombie",
 			p: "/drivers",
 			i: "1", // zombie true
 			m: "GET",
 			s: http.StatusOK,
-			h: map[string]string{"Authorization": "Bearer AUTH_TOKEN"}, // don't do this
 			r: `{"id":1,"zombie":true}`,
 		},
 		zombieReq{
@@ -111,7 +101,6 @@ var zombieTest = handlerTest{
 			i: "2", // zombie false
 			m: "GET",
 			s: http.StatusOK,
-			h: map[string]string{"Authorization": "Bearer AUTH_TOKEN"}, // don't do this
 			r: `{"id":2,"zombie":false}`,
 		},
 		zombieReq{
@@ -120,7 +109,6 @@ var zombieTest = handlerTest{
 			i: "3", // user not found
 			m: "GET",
 			s: http.StatusNotFound,
-			h: map[string]string{"Authorization": "Bearer AUTH_TOKEN"}, // don't do this
 		},
 	},
 }
@@ -163,9 +151,6 @@ func TestProxy(t *testing.T) {
 		t.Run(tc.d, func(t *testing.T) {
 			req, _ := http.NewRequest(tc.m, zombieService.URL+path.Join(tc.p, tc.i), nil)
 			req.Close = true // close TCP conn after response was read
-			for k, v := range tc.h {
-				req.Header.Set(k, v)
-			}
 			req.Header.Set("Connection", "close")
 			res, err := zombieClient.Do(req)
 			if err != nil {
