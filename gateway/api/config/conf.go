@@ -21,17 +21,20 @@ func (p protocol) String() string {
 	return [...]string{"_", "NSQ", "HTTP"}[p]
 }
 
+type nsq struct {
+	Topic    string   `yaml:"topic"`
+	TCPAddrs []string `yaml:"dest_tcp_addr"`
+}
+type http struct {
+	Host string `yaml:"host"`
+}
+
 // Does not support query params.
 type URL struct {
 	Path   string `yaml:"path"`
 	Method string `yaml:"method"`
-	NSQ    struct {
-		Topic    string   `yaml:"topic"`
-		TCPAddrs []string `yaml:"dest_tcp_addr"`
-	} `yaml:"nsq"`
-	HTTP struct {
-		Host string `yaml:"host"`
-	} `yaml:"http"`
+	NSQ    nsq    `yaml:"nsq"`
+	HTTP   http   `yaml:"http"`
 }
 
 func (u URL) Protocol() (protocol, error) {

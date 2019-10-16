@@ -24,7 +24,7 @@ var inputs = []string{
 	`urls:
   -
     path: "/drivers/{id:[0-9]+}"
-    method: "GET"`, // second case; one url
+    method: "GET"`, // second case; one url; missing protocol
 }
 
 type testURL struct {
@@ -41,7 +41,7 @@ type testURL struct {
 
 // map expected errors to expected output
 type res struct {
-	u testURL
+	u URL
 	p protocol
 	e error // expected error
 }
@@ -52,41 +52,26 @@ var cfgtests = []struct {
 	want []res  // expected result
 }{
 	{
-		d:  "expect config to contain two URLs",
+		d:  "expect config to contain 2 URLs",
 		in: inputs[0],
 		want: []res{
 			res{
-				u: testURL{
+				u: URL{
 					Path:   "/drivers/{id:[0-9]+}/locations",
 					Method: "PATCH",
-					NSQ: struct {
-						Topic    string
-						TCPAddrs []string
-					}{
+					NSQ: nsq{
 						Topic:    "locations",
 						TCPAddrs: []string{"127.0.0.1:4150"},
 					},
-					HTTP: struct {
-						Host string
-					}{},
 				},
 				p: NSQ,
 				e: nil,
 			},
 			res{
-				u: testURL{
+				u: URL{
 					Path:   "/drivers/{id:[0-9]+}",
 					Method: "GET",
-					NSQ: struct {
-						Topic    string
-						TCPAddrs []string
-					}{
-						Topic:    "locations",
-						TCPAddrs: []string{"127.0.0.1:4150"},
-					},
-					HTTP: struct {
-						Host string
-					}{
+					HTTP: http{
 						Host: "zombie-driver",
 					},
 				},
@@ -100,9 +85,9 @@ var cfgtests = []struct {
 		in: inputs[1],
 		want: []res{
 			res{
-				u: testURL{
-					Path:   "/drivers/{id:[0-9]+}/locations",
-					Method: "PATCH",
+				u: URL{
+					Path:   "/drivers/{id:[0-9]+}",
+					Method: "GET",
 				},
 				e: errors.New("URL is missing protocol"),
 			},
@@ -117,19 +102,28 @@ func TestLoad(t *testing.T) {
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		if len(tt.want) != len(cfg.URLs) {
-			t.Fatalf("%s: expected URL count: %d got: %d", tt.d, len(tt.want), len(cfg.URLs))
+		if w, g := len(tt.want), len(cfg.URLs); w != g {
+			t.Fatalf("%s: want count: %d got: %d", tt.d, w, g)
 		}
 		for i, u := range cfg.URLs {
-			if reflect.DeepEqual(tt.want[i].u, u) {
-				t.Errorf("%s: expected URL:\n%+v\ngot:\n%+v", tt.d, tt.want[i].u, u)
+			if w, g := tt.want[i].u, u; !reflect.DeepEqual(w, g) {
+				t.Errorf("%s:\nwant URL:\n%+v\ngot:\n%+v", tt.d, w, g)
 			}
 			p, err := u.Protocol()
-			if tt.want[i].e != nil && tt.want[i].e.Error() != err.Error() {
-				t.Errorf("%s: expected error:\n%s\ngot:\n%s", tt.d, tt.want[i].e.Error(), err.Error())
+			// unexpected error
+			if w, g := tt.want[i].e, err; w == nil && g != nil {
+				t.Fatalf("%s: unexpected error: %s", tt.d, g.Error())
 			}
-			if tt.want[i].p != p {
-				t.Errorf("expected protocol: %s got:%s", tt.want[i].p, p)
+			// expected error
+			if w, g := tt.want[i].e, err; w != nil && g == nil {
+				t.Fatalf("%s: want error: %v got: %v", tt.d, w, g)
+			}
+			if w, g := tt.want[i].e, err; (w != nil && g != nil) && (w.Error() != g.Error()) {
+				t.Fatalf("%s: want error: %v got: %v", tt.d, w.Error(), g.Error())
+			}
+
+			if w, g := tt.want[i].p, p; w != g {
+				t.Errorf("%s: want protocol: %s got:%s", tt.d, w, g)
 			}
 		}
 	}
