@@ -20,10 +20,7 @@ import (
 func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler, error) {
 	// initialize middleware common to all handlers
 	var mw []middleware.Middleware
-	mw = append(mw,
-		middleware.NewAuthCheck(authtoken),
-		middleware.NewRecoverHandler(),
-	)
+	mw = append(mw, middleware.NewRecoverHandler())
 	mw = append(mw, middleware.NewContextLog(logger)...)
 	// we measure response time only for all handlers
 	mc := middleware.NewMetricsConfig().WithTimeHist(responseTimeHistogram)
@@ -35,7 +32,7 @@ func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler,
 		if err != nil {
 			return nil, err
 		}
-		// NOTE: relies on valid URL configuration
+		// relies on valid URL configuration
 		router.Handle(url.Path, middleware.Use(h, mw...)).Methods(url.Method)
 	}
 	router.Handle("/ready", &handler.ReadinessHandler{})
@@ -52,8 +49,7 @@ func newHandler(u config.URL, logger zerolog.Logger) (http.Handler, error) {
 		return newNSQHandler(u)
 	case config.HTTP:
 		// in a real world scenario we would factor this out to perform more
-		// sofisticated operations like rewriting/removing headers e.g.
-		// Authentication.
+		// sofisticated operations like rewriting headers for HTTPS connections.
 		// we ignore Transfer-Encoding hop-by-hop header; expecting `chunked` to
 		// be applied if required. returns http.StatusBadGateway if backend is
 		// not reachable.
