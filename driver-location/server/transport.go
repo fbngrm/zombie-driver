@@ -12,6 +12,9 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// ZRangeByScore returns all the elements in the sorted set at key with a score
+// between min and max (including elements with score equal to min or max).
+// The elements are considered to be ordered from low to high scores.
 type zRangeByScorer interface {
 	ZRangeByScore(key string, min, max int64) ([]string, error)
 }

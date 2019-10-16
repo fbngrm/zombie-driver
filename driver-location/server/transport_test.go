@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,10 +18,9 @@ type redisTestClient struct{}
 
 func (r *redisTestClient) ZRangeByScore(key string, min, max int64) ([]string, error) {
 	mins := (max - min) / 60 // minutes
+	fmt.Println(mins)
 	return locationTests[key][mins].l, locationTests[key][mins].e
 }
-
-var testErr = errors.New("redis_test_error")
 
 // location/error by driver ID and minutes
 var locationTests = map[string]map[int64]struct {
@@ -80,34 +80,34 @@ var locationTests = map[string]map[int64]struct {
 			l: nil,
 			d: "expect error in redis lookup",
 			p: "/drivers/2/locations?minutes=1",
-			r: "",
-			e: testErr,
+			r: `{"error":"internal_error"}`,
+			e: errors.New("redis_test_error"),
 			s: http.StatusInternalServerError,
 		},
 		2: { // 2 minutes
-			l: nil,
-			d: "expect unmarshalling error",
+			l: []string{`{"foo":"bar"`}, // missing closing brace
+			d: "expect unexpected end of JSON input",
 			p: "/drivers/2/locations?minutes=2",
-			r: "",
-			e: testErr,
+			r: `{"error":"internal_error"}`,
+			e: nil,
 			s: http.StatusInternalServerError,
 		},
 	},
 }
 
 func TestServeHTTP(t *testing.T) {
-	// mute logger in tests
+	// mute logger
 	logger := zerolog.New(ioutil.Discard)
 	log.SetFlags(0)
 	log.SetOutput(logger)
 
-	// create the handler to test
+	// handler to test
 	h, err := newLocationHandler(&redisTestClient{}, logger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// test server
+	// serve handler
 	locationService := httptest.NewServer(h)
 	defer locationService.Close()
 	locationClient := locationService.Client()
@@ -117,21 +117,21 @@ func TestServeHTTP(t *testing.T) {
 			tt := locationTests[id][minutes]
 			t.Run(tt.d, func(t *testing.T) {
 				req, _ := http.NewRequest("GET", locationService.URL+tt.p, nil)
-				req.Close = true // close TCP conn after response was read
+				req.Close = true
 				req.Header.Set("Connection", "close")
 				res, err := locationClient.Do(req)
 				if err != nil {
 					t.Fatalf("%s: unexpected error %v", tt.d, err)
 				}
 				if w, g := tt.s, res.StatusCode; w != g {
-					t.Errorf("%s: expect status code %d got %d", tt.d, w, g)
+					t.Errorf("%s: want status code %d got %d", tt.d, w, g)
 				}
 				data, err := ioutil.ReadAll(res.Body)
 				if err != nil {
-					t.Errorf("%s: failed to read response %v", tt.d, err)
+					t.Fatalf("%s: failed to read response %v", tt.d, err)
 				}
 				if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
-					t.Errorf("%s: expect response\n%s\ngot\n%s", tt.d, w, g)
+					t.Errorf("%s: want response\n%s\ngot\n%s", tt.d, w, g)
 				}
 			})
 		}
