@@ -1,6 +1,140 @@
 package testdata
 
-// Test data of driving a roundabout in Libreville/Congo for a few minutes.
+// This module contains test data of driving a roundabout in Libreville/Congo
+// for a few minutes.
+
+// GPS location
+type Location struct {
+	Lat  float64
+	Long float64
+}
+
+var Locations = []Location{
+	{
+		Lat:  0.40059538,
+		Long: 9.43746775,
+	},
+	{ // 36.83m distance to previous location
+		Lat:  0.40073485,
+		Long: 9.43776816,
+	},
+	{ // 19.68m
+		Lat:  0.40091187,
+		Long: 9.43776816,
+	},
+	{ // 13.72m
+		Lat:  0.40091187,
+		Long: 9.43764478,
+	},
+	{ // 23.02m
+		Lat:  0.40080459,
+		Long: 9.43746775,
+	},
+	{ // 23.26m
+		Lat:  0.40059538,
+		Long: 9.43746775,
+	},
+}
+
+type LocationDist struct {
+	L []Location
+	D float64 // total distance between all locations in km
+}
+
+var Distances = []LocationDist{
+	{
+		L: []Location{
+			Locations[0],
+			Locations[1],
+		},
+		D: 0.03682779259699572,
+	},
+	{
+		L: []Location{
+			Locations[1],
+			Locations[2],
+		},
+		D: 0.01968372591462287,
+	},
+	{
+		L: []Location{
+			Locations[2],
+			Locations[3],
+		},
+		D: 0.013718894195373406,
+	},
+	{
+		L: []Location{
+			Locations[3],
+			Locations[4],
+		},
+		D: 0.023016835548780985,
+	},
+	{
+		L: []Location{
+			Locations[4],
+			Locations[5],
+		},
+		D: 0.023263090603309826,
+	},
+	{
+		L: []Location{
+			Locations[5],
+			Locations[0],
+		},
+		D: 0,
+	},
+	{
+		L: []Location{
+			Locations[0],
+			Locations[1],
+			Locations[2],
+		},
+		D: 0.05651151851161859,
+	},
+	{
+		L: []Location{
+			Locations[0],
+			Locations[1],
+			Locations[2],
+			Locations[3],
+		},
+		D: 0.070230412706992,
+	},
+	{
+		L: []Location{
+			Locations[0],
+			Locations[1],
+			Locations[2],
+			Locations[3],
+			Locations[4],
+		},
+		D: 0.09324724825577299,
+	},
+	{
+		L: []Location{
+			Locations[0],
+			Locations[1],
+			Locations[2],
+			Locations[3],
+			Locations[4],
+			Locations[5],
+		},
+		D: 0.11651033885908282,
+	},
+	{
+		L: []Location{
+			Locations[0],
+			Locations[1],
+			Locations[2],
+			Locations[3],
+			Locations[4],
+			Locations[5],
+			Locations[0],
+		},
+		D: 0.11651033885908282,
+	},
+}
 var Drives = []struct {
 	Locs     []string // location updates as json lines
 	Loc      string   // array of location updates as a single string
