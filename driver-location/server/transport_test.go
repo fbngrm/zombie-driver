@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,7 +17,6 @@ type redisTestClient struct{}
 
 func (r *redisTestClient) ZRangeByScore(key string, min, max int64) ([]string, error) {
 	mins := (max - min) / 60 // minutes
-	fmt.Println(mins)
 	return locationTests[key][mins].l, locationTests[key][mins].e
 }
 
