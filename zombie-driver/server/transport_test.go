@@ -19,7 +19,6 @@ func TestHaversine(t *testing.T) {
 		for i := 0; i < len(tt.L)-1; i++ {
 			dist += haversineKm(tt.L[i].Lat, tt.L[i].Long, tt.L[i+1].Lat, tt.L[i+1].Long)
 		}
-		t.Log(dist)
 		if w, g := tt.D, dist; w != g {
 			t.Errorf("haversine distance: want %f but got %f", w, g)
 		}
@@ -168,7 +167,10 @@ func TestProxy(t *testing.T) {
 			zombieClient := zombieService.Client()
 
 			t.Run(tt.d, func(t *testing.T) {
-				req, _ := http.NewRequest("GET", zombieService.URL+tt.p, nil)
+				req, err := http.NewRequest("GET", zombieService.URL+tt.p, nil)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
 				req.Close = true
 				req.Header.Set("Connection", "close")
 				res, err := zombieClient.Do(req)
