@@ -59,7 +59,7 @@ var cfgtests = []struct {
 				u: URL{
 					Path:   "/drivers/{id:[0-9]+}/locations",
 					Method: "PATCH",
-					NSQ: nsq{
+					NSQ: NSQConf{
 						Topic:    "locations",
 						TCPAddrs: []string{"127.0.0.1:4150"},
 					},
@@ -71,7 +71,7 @@ var cfgtests = []struct {
 				u: URL{
 					Path:   "/drivers/{id:[0-9]+}",
 					Method: "GET",
-					HTTP: http{
+					HTTP: HTTPConf{
 						Host: "zombie-driver",
 					},
 				},

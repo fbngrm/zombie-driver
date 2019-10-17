@@ -46,7 +46,7 @@ func newHandler(u config.URL, logger zerolog.Logger) (http.Handler, error) {
 	}
 	switch p {
 	case config.NSQ:
-		return newNSQHandler(u)
+		return newNSQHandler(u, logger)
 	case config.HTTP:
 		// in a real world scenario we would factor this out to perform more
 		// sofisticated operations like rewriting headers for HTTPS connections.
@@ -67,17 +67,25 @@ type nsqHandler struct {
 	producers map[string]*nsq.Producer
 }
 
-// NOTE: throttling is not enabled for producers which should be done in a
-// production environment.
-func newNSQHandler(u config.URL) (*nsqHandler, error) {
+// NOTE: throttling is not enabled
+// producers will lazily connect to the nsqd instance (and re-connect) when
+// Publish commands are executed.
+func newNSQHandler(u config.URL, logger zerolog.Logger) (*nsqHandler, error) {
 	cfg := nsq.NewConfig()
 	cfg.UserAgent = fmt.Sprintf("go-nsq/%s", nsq.VERSION)
+
 	producers := make(map[string]*nsq.Producer)
 	for _, addr := range u.NSQ.TCPAddrs {
 		producer, err := nsq.NewProducer(addr, cfg)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create nsq.Producer - %s", err)
 		}
+
+		// zerolog.Logger does not work here
+		// producer.SetLogger(logger, logger.Level)
+
+		// FIXME: stop producers
+		//defer w.Stop()
 		producers[addr] = producer
 	}
 	return &nsqHandler{
@@ -92,12 +100,12 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
 	var l api.Location
 	// marshal instead of decode since we expect a single JSON string
 	// only not a stream or additional data
 	err = json.Unmarshal(body, &l)
 	if err != nil {
-		// should we really expose error details here?
 		handler.WriteError(w, r, err, http.StatusBadRequest)
 		return
 	}
@@ -108,6 +116,8 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	// producers publishing synchronously
 	for _, producer := range n.producers {
 		err := producer.Publish(n.topic, b)
 		if err != nil {

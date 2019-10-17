@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -8,8 +9,10 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
+	nsq "github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 )
 
@@ -19,7 +22,7 @@ var gatewayConf = config.Config{
 			Path:   "/drivers/{id:[0-9]+}/locations",
 			Method: "PATCH",
 			NSQ: config.NSQConf{
-				Topic:    "locations",
+				Topic:    "test-locations",
 				TCPAddrs: []string{"127.0.0.1:4150"},
 			},
 		},
@@ -42,7 +45,7 @@ var gatewayTests = map[string]struct {
 }{
 	"0": {
 		d: "expect StatusBadGateway when failing to reach the backend",
-		p: "/drivers/0", // 2 test hijacked requests
+		p: "/drivers/0", // 0 test hijacked requests
 		s: http.StatusBadGateway,
 	},
 	"1": {
@@ -164,4 +167,179 @@ func TestProxy(t *testing.T) {
 			}
 		})
 	}
+}
+
+var nsqTests = []struct {
+	d string // description of test case
+	b string // body of test test request
+	p string // request path
+	s int    // expected response status code
+}{
+	{
+		d: "expect StatusBadRequest for mal-formatted JSON payload",
+		b: `"id":"0","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/0/locations",
+		s: http.StatusBadRequest,
+	},
+	{
+		d: "expect StatusBadRequest for empty payload",
+		p: "/drivers/0/locations",
+		s: http.StatusBadRequest,
+	},
+	{
+		d: "expect StatusNotFound for invalid user",
+		p: "/drivers/foo/locations",
+		s: http.StatusNotFound,
+	},
+	{
+		d: "expect StatusOK",
+		b: `{"id":"0","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/0/locations",
+		s: http.StatusOK,
+	},
+	{
+		d: "expect StatusOK",
+		b: `{"id":"1","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/1/locations",
+		s: http.StatusOK,
+	},
+	{
+		d: "expect StatusOK",
+		b: `{"id":"2","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/2/locations",
+		s: http.StatusOK,
+	},
+	{
+		d: "expect StatusOK",
+		b: `{"id":"3","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/3/locations",
+		s: http.StatusOK,
+	},
+	{
+		d: "expect StatusOK",
+		b: `{"id":"123456789","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/123456789/locations",
+		s: http.StatusOK,
+	},
+	{
+		d: "expect StatusOK",
+		b: `{"id":"10000000","latitude":48.864193,"longitude":2.350498}`,
+		p: "/drivers/10000000/locations",
+		s: http.StatusOK,
+	},
+}
+
+var nullLogger = log.New(ioutil.Discard, "", log.LstdFlags)
+
+// test needs to set a timeout
+func TestNSQ(t *testing.T) {
+	// mute logger in tests
+	logger := zerolog.New(ioutil.Discard)
+	log.SetFlags(0)
+	log.SetOutput(logger)
+
+	// handler to test
+	h, err := newGatewayHandler(&gatewayConf, logger)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	gatewayService := httptest.NewServer(h)
+	defer gatewayService.Close()
+	gatewayClient := gatewayService.Client()
+
+	count := 0                // expected message count
+	want := make([]string, 0) // expected messages
+
+	// send requests to publish nsq messages
+	for id := range nsqTests {
+		tt := nsqTests[id]
+		t.Run(tt.d, func(t *testing.T) {
+			req, err := http.NewRequest("PATCH", gatewayService.URL+tt.p, nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			req.Close = true
+			req.Header.Set("Connection", "close")
+			req.Body = ioutil.NopCloser(strings.NewReader(tt.b))
+			res, err := gatewayClient.Do(req)
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+			if w, g := tt.s, res.StatusCode; w != g {
+				t.Errorf("want status code %d got %d", w, g)
+			}
+			// increase counter only if NSQ message has been sent successfully
+			if res.StatusCode == http.StatusOK {
+				want = append(want, tt.b)
+				count++
+			}
+		})
+	}
+
+	// no messages sent
+	if count < 1 {
+		return
+	}
+
+	// need to set test timeout; potentially blocks forever if not
+	// all messages are delivered
+	c := newConsumerHandler(t, gatewayConf.URLs[0].NSQ.Topic, count)
+	c.read(gatewayConf.URLs[0].NSQ.TCPAddrs[0])
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if w, g := len(want), len(c.got); w != g {
+		t.Errorf("want %d messages got %d", w, g)
+	}
+	for i := range want {
+		if w, g := want[i], c.got[i]; w != g {
+			t.Errorf("want message %s got %s", w, g)
+		}
+	}
+}
+
+type ConsumerHandler struct {
+	t    *testing.T
+	want int
+	got  []string
+	c    *nsq.Consumer
+}
+
+func newConsumerHandler(t *testing.T, topic string, want int) *ConsumerHandler {
+	config := nsq.NewConfig()
+	config.DefaultRequeueDelay = 0
+	config.MaxBackoffDuration = 50 * time.Millisecond
+	c, _ := nsq.NewConsumer(topic, "ch", config)
+	c.SetLogger(nullLogger, nsq.LogLevelInfo)
+
+	h := &ConsumerHandler{
+		t:    t,
+		want: want,
+		got:  make([]string, 0),
+		c:    c,
+	}
+	c.AddHandler(h)
+	return h
+}
+
+func (h *ConsumerHandler) HandleMessage(message *nsq.Message) error {
+	h.got = append(h.got, string(message.Body))
+	if len(h.got) == h.want {
+		h.c.Stop()
+	}
+	return nil
+}
+
+func (h *ConsumerHandler) read(addr string) error {
+	if h.want == 0 {
+		return errors.New("want < 1")
+	}
+	err := h.c.ConnectToNSQD(addr)
+	if err != nil {
+		return err
+	}
+	<-h.c.StopChan
+	return nil
 }

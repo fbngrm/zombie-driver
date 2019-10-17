@@ -1,4 +1,6 @@
-.PHONY: all build test test-race test-cover lint
+SHELL := /bin/bash
+.PHONY: all build test test-race test-cover lint docker
+export HOST_NAME=void
 
 all: build
 	. secrets/.env-test && ./bin/gateway
@@ -10,17 +12,19 @@ build:
         ./cmd/gateway/main.go
 
 test:
-	. secrets/.env-test && go test ./...
+	. secrets/.env-test && go test -v -timeout 60s ./...
 
 test-race:
-	. secrets/.env-test && go test -race -cover ./...
+	. secrets/.env-test && go test -v -race -cover ./...
 
 test-cover:
 	rm -f all.coverage.out
 	. secrets/.env-test  && go test -race -coverprofile=all.coverage.out -coverpkg=./... $$(go list ./...|grep -v cmd)
 
+test-docker:
+	./test.sh
+
 lint:
 	docker pull golangci/golangci-lint:latest
 	docker run -v`pwd`:/workspace -w /workspace \
         golangci/golangci-lint:latest golangci-lint run ./...
-
