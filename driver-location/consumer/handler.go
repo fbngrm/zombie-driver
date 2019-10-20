@@ -25,11 +25,11 @@ func (h *LocationUpdater) HandleMessage(m *nsq.Message) error {
 	if err != nil {
 		return err
 	}
-	t := time.Now()
+	t := time.Unix(0, m.Timestamp)
 	lu := server.LocationUpdate{
-		UpdatedAt: t.UTC().Format(time.RFC3339),
+		UpdatedAt: t.Format(time.RFC3339),
 		Lat:       l.Lat,
 		Long:      l.Long,
 	}
-	return h.Publish(t.Unix(), l.ID, lu)
+	return h.Publish(t.UnixNano(), l.ID, lu)
 }
