@@ -15,7 +15,7 @@ import (
 
 type redisTestClient struct{}
 
-func (r *redisTestClient) ZRangeByScore(key string, min, max int64) ([]string, error) {
+func (r *redisTestClient) FetchRange(key string, min, max int64) ([]string, error) {
 	mins := (max - min) / 60 // minutes
 	return locationTests[key][mins].l, locationTests[key][mins].e
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/go-redis/redis"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
@@ -33,11 +32,8 @@ type HTTPServer struct {
 	logger zerolog.Logger
 }
 
-func New(httpAddr, redisAddr string, logger zerolog.Logger) (*HTTPServer, error) {
-	r := &redisClient{
-		c: redis.NewClient(&redis.Options{Addr: redisAddr}),
-	}
-	router, err := newLocationHandler(r, logger)
+func New(httpAddr string, rf RangeFetcher, logger zerolog.Logger) (*HTTPServer, error) {
+	router, err := newLocationHandler(rf, logger)
 	if err != nil {
 		return nil, err
 	}

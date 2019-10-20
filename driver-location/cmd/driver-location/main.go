@@ -7,6 +7,7 @@ import (
 	"github.com/heetch/FabianG-technical-test/driver-location/cmd/driver-location/cli"
 	"github.com/heetch/FabianG-technical-test/driver-location/consumer"
 	"github.com/heetch/FabianG-technical-test/driver-location/server"
+	"github.com/heetch/FabianG-technical-test/driver-location/store"
 	"github.com/heetch/FabianG-technical-test/metrics"
 	nsq "github.com/nsqio/go-nsq"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -38,7 +39,8 @@ func main() {
 
 	logger := cli.NewLogger(*service, version)
 
-	httpSrv, err := server.New(*httpAddr, *redisAddr, logger)
+	redisStore := store.NewRedis(*redisAddr)
+	httpSrv, err := server.New(*httpAddr, redisStore, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s service: %v\n", *service, err)
 		os.Exit(2)
@@ -52,12 +54,14 @@ func main() {
 		NumPublishers:    *numPublishers,
 		Topic:            *topic,
 		Channel:          *channel,
-		RedisAddr:        *redisAddr,
 		LookupdHTTPAddrs: *lookupdHTTPAddrs,
 		NsqdTCPAddrs:     *nsqdTCPAddrs,
 		Cfg:              cfg,
 	}
-	nsqConsumer, err := consumer.NewNSQ(ncfg, logger)
+	handler := &consumer.LocationUpdater{
+		redisStore,
+	}
+	nsqConsumer, err := consumer.NewNSQ(ncfg, handler, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s service: %v\n", *service, err)
 		os.Exit(2)

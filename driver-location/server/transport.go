@@ -12,21 +12,21 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ZRangeByScore returns all the elements in the sorted set at key with a score
-// between min and max (including elements with score equal to min or max).
-// The elements are considered to be ordered from low to high scores.
-type zRangeByScorer interface {
-	ZRangeByScore(key string, min, max int64) ([]string, error)
+// RangeFetcher provides a method to fetch all the elements in a set at key
+// with a score between min and max (including elements with score equal to
+// min or max).
+type RangeFetcher interface {
+	FetchRange(key string, min, max int64) ([]string, error)
 }
 
-func newLocationHandler(z zRangeByScorer, logger zerolog.Logger) (http.Handler, error) {
+func newLocationHandler(rf RangeFetcher, logger zerolog.Logger) (http.Handler, error) {
 	var mw []middleware.Middleware
 	mw = append(mw, middleware.NewRecoverHandler())
 	mw = append(mw, middleware.NewContextLog(logger)...)
 	mc := middleware.NewMetricsConfig().WithTimeHist(responseTimeHistogram)
 	mw = append(mw, middleware.NewMetricsHandler(mc))
 
-	lh := &locationHandler{z}
+	lh := &locationHandler{rf}
 	router := mux.NewRouter()
 	router.Handle("/drivers/{id:[0-9]+}/locations", middleware.Use(lh, mw...)).Methods("GET").Queries("minutes", "{minutes}")
 	router.Handle("/ready", &handler.ReadinessHandler{})
@@ -34,7 +34,7 @@ func newLocationHandler(z zRangeByScorer, logger zerolog.Logger) (http.Handler, 
 }
 
 type locationHandler struct {
-	zRangeByScorer
+	RangeFetcher
 }
 
 func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,7 @@ func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	t := time.Now()
 	min := t.Add(-1 * time.Duration(minutes) * time.Minute).Unix()
-	locations, err := l.ZRangeByScore(id, min, t.Unix())
+	locations, err := l.FetchRange(id, min, t.Unix())
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
