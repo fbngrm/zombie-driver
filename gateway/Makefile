@@ -1,6 +1,4 @@
-SHELL := /bin/bash
 .PHONY: all build test test-race test-cover lint docker
-export HOST_NAME=void
 
 all: build
 	. secrets/.env-test && ./bin/gateway
@@ -12,7 +10,7 @@ build:
         ./cmd/gateway/main.go
 
 test:
-	. secrets/.env-test && go test -v -timeout 60s ./...
+	. secrets/.env-test && go test -v ./...
 
 test-race:
 	. secrets/.env-test && go test -v -race -cover ./...
