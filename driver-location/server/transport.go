@@ -12,13 +12,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// RangeFetcher provides a method to fetch all the elements in a set at key
-// with a score between min and max (including elements with score equal to
-// min or max).
-type RangeFetcher interface {
-	FetchRange(key string, min, max int64) ([]string, error)
-}
-
 func newLocationHandler(rf RangeFetcher, logger zerolog.Logger) (http.Handler, error) {
 	var mw []middleware.Middleware
 	mw = append(mw, middleware.NewRecoverHandler())
@@ -33,6 +26,13 @@ func newLocationHandler(rf RangeFetcher, logger zerolog.Logger) (http.Handler, e
 	return router, nil
 }
 
+// RangeFetcher provides a method to fetch all the elements in a set at key
+// with a score between min and max (including elements with score equal to
+// min or max).
+type RangeFetcher interface {
+	FetchRange(key string, min, max int64) ([]string, error)
+}
+
 type locationHandler struct {
 	RangeFetcher
 }
@@ -45,8 +45,8 @@ func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	t := time.Now()
-	min := t.Add(-1 * time.Duration(minutes) * time.Minute).Unix()
-	locations, err := l.FetchRange(id, min, t.Unix())
+	min := t.Add(-1 * time.Duration(minutes) * time.Minute).UnixNano()
+	locations, err := l.FetchRange(id, min, t.UnixNano())
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
