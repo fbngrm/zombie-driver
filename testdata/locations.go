@@ -135,6 +135,7 @@ var Distances = []LocationDist{
 		D: 0.11651033885908282,
 	},
 }
+
 var Drives = []struct {
 	Locs     []string // location updates as json lines
 	Loc      string   // array of location updates as a single string
