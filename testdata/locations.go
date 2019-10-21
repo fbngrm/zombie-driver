@@ -5,32 +5,39 @@ package testdata
 
 // GPS location
 type Location struct {
+	ID   string
 	Lat  float64
 	Long float64
 }
 
 var Locations = []Location{
 	{
+		ID:   "0",
 		Lat:  0.40059538,
 		Long: 9.43746775,
 	},
 	{ // 36.83m distance to previous location
+		ID:   "0",
 		Lat:  0.40073485,
 		Long: 9.43776816,
 	},
 	{ // 19.68m
+		ID:   "0",
 		Lat:  0.40091187,
 		Long: 9.43776816,
 	},
 	{ // 13.72m
+		ID:   "0",
 		Lat:  0.40091187,
 		Long: 9.43764478,
 	},
 	{ // 23.02m
+		ID:   "0",
 		Lat:  0.40080459,
 		Long: 9.43746775,
 	},
 	{ // 23.26m
+		ID:   "0",
 		Lat:  0.40059538,
 		Long: 9.43746775,
 	},
