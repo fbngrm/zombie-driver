@@ -26,13 +26,14 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error, code int) {
 		Logger()
 
 	// Hide error from client if it's internal.
-	if code == http.StatusInternalServerError {
+	switch code {
+	case http.StatusInternalServerError:
 		logger.Error().Msg("unexpected http error")
 		err = errInternal
-	} else if code == http.StatusBadRequest { // added
+	case http.StatusBadRequest:
 		logger.Error().Msg("http error bad request")
 		err = errBadRequest
-	} else {
+	default:
 		logger.Debug().Msg("http error")
 	}
 	EncodeJSON(w, r, &Error{Err: err.Error()}, code)
