@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
@@ -41,24 +42,29 @@ type zombieHandler struct {
 	zombieTime   int     // minutes
 }
 
-// ServeHTTP fetches location updates from the drive-ocation service and
-// determines if the given driver ID identifies a zombie. If are no locations
-// udpates available, we do not assume the driver is a zombie. If there are
-// updates available, the driver is considered to be a zombie if the total
-// distance he moved during the zombieTime is smaller than zombieRadius.
+// ServeHTTP fetches location updates from the drive-location service and
+// determines if the given driver ID identifies a zombie. If there are no
+// location udpates available, we do not assume the driver is a zombie. If
+// there are updates available, the driver is considered to be a zombie if the
+// total distance he moved during the zombieTime is smaller than zombieRadius.
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	// fetch locations from driver-location service
-	request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id, z.zombieTime), nil)
-	if err != nil {
+
+	// circuit-breaker
+	var response *http.Response
+	if err := hystrix.Do("driver_location", func() error {
+		// fetch locations from driver-location service
+		request, err := http.NewRequest("GET", fmt.Sprintf(z.url, id, z.zombieTime), nil)
+		if err != nil {
+			return err
+		}
+		response, err = z.client.Do(request)
+		return err
+	}, nil); err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	response, err := z.client.Do(request)
-	if err != nil {
-		handler.WriteError(w, r, err, http.StatusInternalServerError)
-		return
-	}
+
 	// something wrong with the URL
 	if response.StatusCode == http.StatusNotFound {
 		w.WriteHeader(http.StatusNotFound)

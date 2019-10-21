@@ -8,6 +8,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/gateway/api"
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
@@ -117,13 +118,18 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// producers publishing synchronously
-	for _, producer := range n.producers {
-		err := producer.Publish(n.topic, b)
-		if err != nil {
-			handler.WriteError(w, r, err, http.StatusInternalServerError)
-			return
+	// circuit-breaker
+	if err := hystrix.Do("publish_nsq", func() error {
+		// producers publishing synchronously
+		for _, producer := range n.producers {
+			if err := producer.Publish(n.topic, b); err != nil {
+				return err
+			}
 		}
+		return nil
+	}, nil); err != nil {
+		handler.WriteError(w, r, err, http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
