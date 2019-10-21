@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/heetch/FabianG-technical-test/metrics"
 	"github.com/heetch/FabianG-technical-test/zombie-driver/cmd/zombie-driver/cli"
 	"github.com/heetch/FabianG-technical-test/zombie-driver/server"
@@ -19,11 +20,20 @@ var (
 	driverLocationURL = kingpin.Flag("driver-location-url", "address of driver-location service").Envar("DRIVER_LOCATION_URL").Required().String()
 	zombieRadius      = kingpin.Flag("zombie-radius", "radius a zombie can move").Envar("ZOMBIE_RADIUS").Required().Float()
 	zombieTime        = kingpin.Flag("zombie-time", "duration for fetching driver locations in minutes").Envar("ZOMBIE_TIME").Default("5").Int()
+	// shutdownDelay is sleep time before we shutdown the server and signal arrives (ms)
+	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 
 func main() {
 	kingpin.Version(version)
 	kingpin.Parse()
+
+	// configure circuit-breaker
+	hystrix.ConfigureCommand("driver_location", hystrix.CommandConfig{
+		Timeout:               1000, // ms
+		MaxConcurrentRequests: 200,
+		ErrorPercentThreshold: 25,
+	})
 
 	logger := cli.NewLogger(*service, version)
 
@@ -33,5 +43,5 @@ func main() {
 		os.Exit(2)
 	}
 	metricsSrv := metrics.New(*metricsAddr, logger)
-	cli.RunServer(httpSrv, metricsSrv)
+	cli.RunServer(httpSrv, metricsSrv, *shutdownDelay)
 }

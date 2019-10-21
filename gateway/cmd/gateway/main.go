@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
 	"github.com/heetch/FabianG-technical-test/gateway/cmd/gateway/cli"
@@ -14,17 +15,22 @@ import (
 var (
 	version = "unkown"
 
-	service     = kingpin.Flag("service", "service name").Envar("SERVICE").Default("gateway").String()
-	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8080").String()
-	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9102").String()
-
-	// shutdownDelay is sleep time before we shutdown the server and signal arrives (ms)
+	service       = kingpin.Flag("service", "service name").Envar("SERVICE").Default("gateway").String()
+	httpAddr      = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8080").String()
+	metricsAddr   = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9102").String()
 	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 
 func main() {
 	kingpin.Version(version)
 	kingpin.Parse()
+
+	// configure circuit-breaker
+	hystrix.ConfigureCommand("publish_nsq", hystrix.CommandConfig{
+		Timeout:               1000, // ms
+		MaxConcurrentRequests: 1000,
+		ErrorPercentThreshold: 25,
+	})
 
 	cfg, err := config.FromFile("./config.yaml")
 	if err != nil {
