@@ -14,8 +14,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var shutdownDelay = 1
-
 // Using default log level debug and write to stderr.
 // Note: We log in (inefficient) human friendly format to console here since it
 // is a coding challenge. In a production environment we would prefer structured,
@@ -33,7 +31,7 @@ func NewLogger(service, version string) zerolog.Logger {
 		Logger()
 }
 
-func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
+func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, shutdownDelay int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -52,7 +50,7 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer) {
 
 	handler.HealthCheckShutDown()
 
-	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(shutdownDelay)*time.Second)
+	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(shutdownDelay)*time.Millisecond)
 	defer cancel()
 
 	// when shutting down, we first gracefully shutting down the main http
