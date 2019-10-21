@@ -28,7 +28,9 @@ var (
 	channel          = kingpin.Flag("channel", "NSQ channel").Envar("CHANNEL").Default("loc-chan").String()
 	numPublishers    = kingpin.Flag("num-publishers", "NSQ publishers").Envar("NUM_PUBLISHERS").Default("100").Int()
 	maxInflight      = kingpin.Flag("max-inflight", "NSQ max inflight").Envar("MAX_INFLIGHT").Default("250").Int()
-	shutdownDelay    = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
+
+	// should be greater then prometheus scrape interval (default 30s); decreased in coding challenge
+	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 
 func main() {

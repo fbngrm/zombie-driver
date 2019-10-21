@@ -18,9 +18,11 @@ import (
 var (
 	version = "unkown"
 
-	service       = kingpin.Flag("service", "service name").Envar("SERVICE").Default("gateway").String()
-	httpAddr      = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8080").String()
-	metricsAddr   = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9102").String()
+	service     = kingpin.Flag("service", "service name").Envar("SERVICE").Default("gateway").String()
+	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8080").String()
+	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9102").String()
+
+	// should be greater then prometheus scrape interval (default 30s); decreased in coding challenge
 	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 
