@@ -28,9 +28,7 @@ var (
 	channel          = kingpin.Flag("channel", "NSQ channel").Envar("CHANNEL").Default("loc-chan").String()
 	numPublishers    = kingpin.Flag("num-publishers", "NSQ publishers").Envar("NUM_PUBLISHERS").Default("100").Int()
 	maxInflight      = kingpin.Flag("max-inflight", "NSQ max inflight").Envar("MAX_INFLIGHT").Default("250").Int()
-
-	// shutdownDelay is sleep time before we shutdown the server and signal arrives (ms)
-	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
+	shutdownDelay    = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 
 func main() {
