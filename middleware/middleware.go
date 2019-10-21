@@ -2,10 +2,12 @@ package middleware
 
 import (
 	"crypto/subtle"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
@@ -32,7 +34,7 @@ func NewAuthCheck(token string) Middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(authToken)) != 1 {
-				http.Error(w, "Authentication is required", http.StatusForbidden)
+				handler.WriteError(w, r, errors.New("Authentication is required"), http.StatusForbidden)
 				return
 			}
 			h.ServeHTTP(w, r)
@@ -48,8 +50,7 @@ func NewRecoverHandler() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					zerolog.Ctx(r.Context()).Error().Msgf("PANIC: %+v", err)
-					http.Error(w, "Internal Server Error", 500)
+					handler.WriteError(w, r, fmt.Errorf("PANIC: %+v", err), http.StatusInternalServerError)
 				}
 			}()
 			h.ServeHTTP(w, r)
