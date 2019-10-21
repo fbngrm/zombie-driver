@@ -4,23 +4,23 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/heetch/FabianG-technical-test/driver-location/server"
+	"github.com/heetch/FabianG-technical-test/types"
 	nsq "github.com/nsqio/go-nsq"
 )
 
 const rfc3339 = `^([\d]+)-(0[1-9]|1[012])-(0[1-9]|[12][\d]|3[01])[Tt]([01][\d]|2[0-3]):([0-5][\d]):([0-5][\d]|60)(\.[\d]+)?(([Zz])|([\+|\-]([01][\d]|2[0-3]):[0-5][\d]))$`
 
 var tests = map[string]struct {
-	d string                // test case description
-	m *nsq.Message          // input
-	l server.LocationUpdate // expected output
+	d string               // test case description
+	m *nsq.Message         // input
+	l types.LocationUpdate // expected output
 }{
 	"1": {
 		d: "expect LocationUpdates to equal",
 		m: nsq.NewMessage(
 			nsq.MessageID{},
 			[]byte(`{"id":"1","latitude":0.40059538,"longitude":9.43746775}`)),
-		l: server.LocationUpdate{
+		l: types.LocationUpdate{
 			Lat:  0.40059538,
 			Long: 9.43746775,
 		},
@@ -30,7 +30,7 @@ var tests = map[string]struct {
 		m: nsq.NewMessage(
 			nsq.MessageID{},
 			[]byte(`{"id":"2","latitude":0.50059538,"longitude":9.53746775}`)),
-		l: server.LocationUpdate{
+		l: types.LocationUpdate{
 			Lat:  0.50059538,
 			Long: 9.53746775,
 		},
@@ -54,7 +54,7 @@ type testPublisher struct {
 	t *testing.T
 }
 
-func (t *testPublisher) Publish(timestamp int64, key string, l server.LocationUpdate) error {
+func (t *testPublisher) Publish(timestamp int64, key string, l types.LocationUpdate) error {
 	w, g := tests[key].l, l
 	if !(w.Lat == g.Lat && w.Long == w.Long) {
 		t.t.Errorf("%s: want %v got %v", tests[key].d, w, g)

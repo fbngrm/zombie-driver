@@ -1,16 +1,11 @@
 package testdata
 
+import "github.com/heetch/FabianG-technical-test/types"
+
 // This module contains test data of driving a roundabout in Libreville/Congo
 // for a few minutes.
 
-// GPS location
-type Location struct {
-	ID   string
-	Lat  float64
-	Long float64
-}
-
-var Locations = []Location{
+var Locations = []types.Location{
 	{
 		ID:   "0",
 		Lat:  0.40059538,
@@ -43,56 +38,51 @@ var Locations = []Location{
 	},
 }
 
-type LocationDist struct {
-	L []Location
-	D float64 // total distance between all locations in km
-}
-
-var Distances = []LocationDist{
+var Distances = []types.LocationDist{
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[0],
 			Locations[1],
 		},
 		D: 0.03682779259699572,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[1],
 			Locations[2],
 		},
 		D: 0.01968372591462287,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[2],
 			Locations[3],
 		},
 		D: 0.013718894195373406,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[3],
 			Locations[4],
 		},
 		D: 0.023016835548780985,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[4],
 			Locations[5],
 		},
 		D: 0.023263090603309826,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[5],
 			Locations[0],
 		},
 		D: 0,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[0],
 			Locations[1],
 			Locations[2],
@@ -100,7 +90,7 @@ var Distances = []LocationDist{
 		D: 0.05651151851161859,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[0],
 			Locations[1],
 			Locations[2],
@@ -109,7 +99,7 @@ var Distances = []LocationDist{
 		D: 0.070230412706992,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[0],
 			Locations[1],
 			Locations[2],
@@ -119,7 +109,7 @@ var Distances = []LocationDist{
 		D: 0.09324724825577299,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[0],
 			Locations[1],
 			Locations[2],
@@ -130,7 +120,7 @@ var Distances = []LocationDist{
 		D: 0.11651033885908282,
 	},
 	{
-		L: []Location{
+		L: []types.Location{
 			Locations[0],
 			Locations[1],
 			Locations[2],

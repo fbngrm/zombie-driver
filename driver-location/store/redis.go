@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/go-redis/redis"
-	"github.com/heetch/FabianG-technical-test/driver-location/server"
+	"github.com/heetch/FabianG-technical-test/types"
 )
 
 // Redis client representing a pool of zero or more
@@ -21,7 +21,7 @@ func NewRedis(addr string) *Redis {
 	}
 }
 
-func (r *Redis) Publish(timestamp int64, key string, l server.LocationUpdate) error {
+func (r *Redis) Publish(timestamp int64, key string, l types.LocationUpdate) error {
 	value, err := json.Marshal(l)
 	if err != nil {
 		return err

@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/heetch/FabianG-technical-test/driver-location/server"
+	"github.com/heetch/FabianG-technical-test/types"
 	nsq "github.com/nsqio/go-nsq"
 )
 
 type Publisher interface {
-	Publish(timestamp int64, key string, l server.LocationUpdate) error
+	Publish(timestamp int64, key string, l types.LocationUpdate) error
 }
 
 // implements the nsq.Handler interface
@@ -18,7 +18,7 @@ type LocationUpdater struct {
 }
 
 func (h *LocationUpdater) HandleMessage(m *nsq.Message) error {
-	var l server.Location
+	var l types.Location
 	// marshal instead of decode since we expect a single JSON string
 	// only not a stream or additional data
 	err := json.Unmarshal(m.Body, &l)
@@ -26,7 +26,7 @@ func (h *LocationUpdater) HandleMessage(m *nsq.Message) error {
 		return err
 	}
 	t := time.Unix(0, m.Timestamp)
-	lu := server.LocationUpdate{
+	lu := types.LocationUpdate{
 		UpdatedAt: t.Format(time.RFC3339),
 		Lat:       l.Lat,
 		Long:      l.Long,

@@ -11,10 +11,10 @@ import (
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gorilla/mux"
-	"github.com/heetch/FabianG-technical-test/gateway/api"
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
+	"github.com/heetch/FabianG-technical-test/types"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 )
@@ -108,7 +108,7 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var l api.Location
+	var l types.Location
 	// marshal instead of decode since we expect a single JSON string
 	// only not a stream or additional data
 	err = json.Unmarshal(body, &l)

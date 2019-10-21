@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
+	"github.com/heetch/FabianG-technical-test/types"
 	"github.com/rs/zerolog"
 )
 
@@ -75,9 +76,10 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+	response.Body.Close()
 
 	// we rely on locations being sorted by update time; either de- or ascending
-	var locs []LocationUpdate
+	var locs []types.LocationUpdate
 	if err = json.Unmarshal(data, &locs); err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
@@ -98,7 +100,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	zombie := ZombieDriver{
+	zombie := types.ZombieDriver{
 		ID:     driverId,
 		Zombie: dist < (z.zombieRadius / 1000.0), // m to km
 	}

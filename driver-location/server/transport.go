@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
+	"github.com/heetch/FabianG-technical-test/types"
 	"github.com/rs/zerolog"
 )
 
@@ -51,9 +52,9 @@ func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	var locs []LocationUpdate
+	var locs []types.LocationUpdate
 	for _, s := range locations {
-		var l LocationUpdate
+		var l types.LocationUpdate
 		err = json.Unmarshal([]byte(s), &l)
 		if err != nil {
 			handler.WriteError(w, r, err, http.StatusInternalServerError)
