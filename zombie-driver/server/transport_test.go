@@ -50,8 +50,8 @@ var zombieTests = map[string]map[int]struct {
 			s: http.StatusNotFound,
 		},
 	},
-	"2": { // test zombie
-		1: {
+	"2": {
+		1: { // zombie
 			l:  testdata.Drives[0].Loc, // 116.51m
 			d:  "expect driver 2 to be a zombie; #1",
 			p:  "/drivers/2",
@@ -59,7 +59,7 @@ var zombieTests = map[string]map[int]struct {
 			zr: 400.0,
 			s:  http.StatusOK,
 		},
-		2: { // test zombie
+		2: { // zombie
 			l:  testdata.Drives[1].Loc, // 233.02m
 			d:  "expect driver 2 to be a zombie; #2",
 			p:  "/drivers/2",
@@ -67,7 +67,7 @@ var zombieTests = map[string]map[int]struct {
 			zr: 400.0,
 			s:  http.StatusOK,
 		},
-		4: { // test not a zombie
+		4: { // something else
 			l:  testdata.Drives[2].Loc, // 466.04m
 			d:  "expect driver 2 to not be a zombie",
 			p:  "/drivers/2",
@@ -86,7 +86,7 @@ var zombieTests = map[string]map[int]struct {
 	"4": { // test malformatted json
 		1: {
 			l: `{"foo":"bar"`,
-			d: "expect InternalServerError for unexpected end of json error",
+			d: "expect InternalServerError for unexpected end of JSON input",
 			p: "/drivers/4",
 			r: `{"error":"internal_error"}`,
 			s: http.StatusInternalServerError,
