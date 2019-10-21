@@ -4,8 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/heetch/FabianG-technical-test/gateway/api/server"
@@ -31,18 +29,7 @@ func NewLogger(service, version string) zerolog.Logger {
 		Logger()
 }
 
-func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, shutdownDelay int) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	go func() {
-		quit := make(chan os.Signal, 1)
-		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-
-		<-quit
-		cancel()
-	}()
-
+func RunServer(ctx context.Context, httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, shutdownDelay int) {
 	go httpSrv.Run()
 	go metricsSrv.Run()
 
@@ -50,7 +37,7 @@ func RunServer(httpSrv *server.HTTPServer, metricsSrv *metrics.MetricsServer, sh
 
 	handler.HealthCheckShutDown()
 
-	ctx, cancel = context.WithTimeout(context.Background(), time.Duration(shutdownDelay)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(shutdownDelay)*time.Millisecond)
 	defer cancel()
 
 	// when shutting down, we first gracefully shutting down the main http

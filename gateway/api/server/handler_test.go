@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -130,7 +131,7 @@ func TestProxy(t *testing.T) {
 	gatewayConf.URLs[1].HTTP.Host = u.Host
 
 	// handler to test
-	h, err := newGatewayHandler(&gatewayConf, logger)
+	h, err := newGatewayHandler(context.Background(), &gatewayConf, logger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -239,7 +240,7 @@ func TestNSQ(t *testing.T) {
 	log.SetOutput(logger)
 
 	// handler to test
-	h, err := newGatewayHandler(&gatewayConf, logger)
+	h, err := newGatewayHandler(context.Background(), &gatewayConf, logger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

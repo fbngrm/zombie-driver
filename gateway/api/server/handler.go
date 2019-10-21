@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -18,7 +19,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler, error) {
+func newGatewayHandler(ctx context.Context, cfg *config.Config, logger zerolog.Logger) (http.Handler, error) {
 	// initialize middleware common to all handlers
 	var mw []middleware.Middleware
 	mw = append(mw, middleware.NewRecoverHandler())
@@ -29,7 +30,7 @@ func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler,
 
 	router := mux.NewRouter()
 	for _, url := range cfg.URLs {
-		h, err := newHandler(url, logger)
+		h, err := newHandler(ctx, url, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -40,14 +41,14 @@ func newGatewayHandler(cfg *config.Config, logger zerolog.Logger) (http.Handler,
 	return router, nil
 }
 
-func newHandler(u config.URL, logger zerolog.Logger) (http.Handler, error) {
+func newHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (http.Handler, error) {
 	p, err := u.Protocol()
 	if err != nil {
 		return nil, err
 	}
 	switch p {
 	case config.NSQ:
-		return newNSQHandler(u, logger)
+		return newNSQHandler(ctx, u, logger)
 	case config.HTTP:
 		// in a real world scenario we would factor this out to perform more
 		// sofisticated operations like rewriting headers for HTTPS connections.
@@ -71,7 +72,7 @@ type nsqHandler struct {
 // NOTE: throttling is not enabled
 // producers will lazily connect to the nsqd instance (and re-connect) when
 // Publish commands are executed.
-func newNSQHandler(u config.URL, logger zerolog.Logger) (*nsqHandler, error) {
+func newNSQHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (*nsqHandler, error) {
 	cfg := nsq.NewConfig()
 	cfg.UserAgent = fmt.Sprintf("go-nsq/%s", nsq.VERSION)
 
@@ -85,10 +86,15 @@ func newNSQHandler(u config.URL, logger zerolog.Logger) (*nsqHandler, error) {
 		// zerolog.Logger does not work here
 		// producer.SetLogger(logger, logger.Level)
 
-		// FIXME: stop producers
-		//defer w.Stop()
 		producers[addr] = producer
 	}
+	// stop publishers on shutdown
+	go func() {
+		<-ctx.Done()
+		for _, p := range producers {
+			p.Stop()
+		}
+	}()
 	return &nsqHandler{
 		topic:     u.NSQ.Topic,
 		producers: producers,

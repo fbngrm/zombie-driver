@@ -33,8 +33,8 @@ type HTTPServer struct {
 	logger zerolog.Logger
 }
 
-func New(addr string, cfg *config.Config, logger zerolog.Logger) (*HTTPServer, error) {
-	router, err := newGatewayHandler(cfg, logger)
+func New(ctx context.Context, addr string, cfg *config.Config, logger zerolog.Logger) (*HTTPServer, error) {
+	router, err := newGatewayHandler(ctx, cfg, logger)
 	if err != nil {
 		return nil, err
 	}

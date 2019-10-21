@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/heetch/FabianG-technical-test/gateway/api/config"
@@ -32,16 +35,28 @@ func main() {
 		ErrorPercentThreshold: 25,
 	})
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+		<-quit
+		cancel()
+	}()
+
 	cfg, err := config.FromFile("./config.yaml")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", *service, err)
 		os.Exit(2)
 	}
 	logger := cli.NewLogger(*service, version)
-	httpSrv, err := server.New(*httpAddr, cfg, logger)
+	httpSrv, err := server.New(ctx, *httpAddr, cfg, logger)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %v\n", *service, err)
 		os.Exit(2)
 	}
-	cli.RunServer(httpSrv, metrics.New(*metricsAddr, logger), *shutdownDelay)
+
+	cli.RunServer(ctx, httpSrv, metrics.New(*metricsAddr, logger), *shutdownDelay)
 }
