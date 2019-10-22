@@ -6,7 +6,19 @@ import (
 
 	"github.com/go-redis/redis"
 	"github.com/heetch/FabianG-technical-test/types"
+	prom "github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	redisExcCounter = prom.NewCounterVec(prom.CounterOpts{
+		Name: "redis_commands",
+		Help: "counts the number redis commands executed per driver"},
+		[]string{"cmd", "id"})
+)
+
+func init() {
+	prom.MustRegister(redisExcCounter)
+}
 
 // MiniRedis is an abstraction for unit tests only. I would prefer a little
 // dependency here over too much abstraction. So this should be replaced by a
@@ -66,6 +78,13 @@ func (r *Redis) Publish(timestamp int64, key string, l types.LocationUpdate) err
 		Score:  float64(timestamp),
 		Member: string(value),
 	}
+
+	lb := prom.Labels{
+		"cmd": "pub",
+		"id":  key,
+	}
+	redisExcCounter.With(lb).Inc()
+
 	return r.ZAddNX(key, &member)
 }
 
@@ -76,5 +95,12 @@ func (r *Redis) FetchRange(key string, min, max int64) ([]string, error) {
 		Min: strconv.FormatInt(min, 10),
 		Max: strconv.FormatInt(max, 10),
 	}
+
+	lb := prom.Labels{
+		"cmd": "fetch",
+		"id":  key,
+	}
+	redisExcCounter.With(lb).Inc()
+
 	return r.ZRangeByScore(key, &opt)
 }
