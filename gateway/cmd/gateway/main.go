@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/afex/hystrix-go/hystrix"
-	"github.com/heetch/FabianG-technical-test/gateway/api/config"
-	"github.com/heetch/FabianG-technical-test/gateway/api/server"
 	"github.com/heetch/FabianG-technical-test/gateway/cmd/gateway/cli"
+	"github.com/heetch/FabianG-technical-test/gateway/config"
+	"github.com/heetch/FabianG-technical-test/gateway/server"
 	"github.com/heetch/FabianG-technical-test/metrics"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )

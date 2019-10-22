@@ -11,7 +11,7 @@ import (
 
 	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gorilla/mux"
-	"github.com/heetch/FabianG-technical-test/gateway/api/config"
+	"github.com/heetch/FabianG-technical-test/gateway/config"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
 	"github.com/heetch/FabianG-technical-test/types"

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/heetch/FabianG-technical-test/gateway/api/server"
+	"github.com/heetch/FabianG-technical-test/gateway/server"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/metrics"
 	"github.com/rs/zerolog"

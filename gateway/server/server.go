@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/heetch/FabianG-technical-test/gateway/api/config"
+	"github.com/heetch/FabianG-technical-test/gateway/config"
 	"github.com/rs/zerolog"
 )
 
