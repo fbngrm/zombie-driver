@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/heetch/FabianG-technical-test/driver-location/cmd/driver-location/cli"
 	"github.com/heetch/FabianG-technical-test/driver-location/consumer"
 	"github.com/heetch/FabianG-technical-test/driver-location/server"
@@ -36,6 +37,18 @@ var (
 func main() {
 	kingpin.Version(version)
 	kingpin.Parse()
+
+	// configure circuit-breaker
+	hystrix.ConfigureCommand("fetch_redis", hystrix.CommandConfig{
+		Timeout:               1000, // ms
+		MaxConcurrentRequests: 1000,
+		ErrorPercentThreshold: 25,
+	})
+	hystrix.ConfigureCommand("handle_nsq_msg", hystrix.CommandConfig{
+		Timeout:               1000, // ms
+		MaxConcurrentRequests: 1000,
+		ErrorPercentThreshold: 25,
+	})
 
 	logger := cli.NewLogger(*service, version)
 

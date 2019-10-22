@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/afex/hystrix-go/hystrix"
 	"github.com/gorilla/mux"
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
@@ -47,11 +48,16 @@ func (l *locationHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	t := time.Now()
 	min := t.Add(-1 * time.Duration(minutes) * time.Minute).UnixNano()
-	locations, err := l.FetchRange(id, min, t.UnixNano())
-	if err != nil {
+
+	var locations []string
+	if err := hystrix.Do("fetch_redis", func() error { // circuit-breaker
+		locations, err = l.FetchRange(id, min, t.UnixNano())
+		return err
+	}, nil); err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
+
 	var locs []types.LocationUpdate
 	for _, s := range locations {
 		var l types.LocationUpdate
