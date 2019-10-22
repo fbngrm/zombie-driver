@@ -43,10 +43,8 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error, code int) {
 func EncodeJSON(w http.ResponseWriter, r *http.Request, v interface{}, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	// FIXME: handle encoding error
 	if err := json.NewEncoder(w).Encode(v); err != nil {
 		LoggerFromRequest(r).Error().Err(err).Interface("value", v).Msg("failed to encode value to http response")
-		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
 
