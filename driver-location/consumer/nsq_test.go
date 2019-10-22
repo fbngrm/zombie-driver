@@ -38,6 +38,7 @@ var consumerTests = []struct {
 	},
 }
 
+// handler is a mock nsq handler which checks the handles messages body.
 type handler struct {
 	received uint32
 	t        *testing.T
@@ -71,8 +72,7 @@ func TestNSQ(t *testing.T) {
 		Cfg:              cfg,
 	}
 
-	// we use a mock handler which compares the count and
-	// body of messages sent and consumed
+	// mock handler
 	h := &handler{t: t}
 	// TODO: mute logger
 	consumer, err := NewNSQ(ncfg, h, logger)
@@ -82,7 +82,7 @@ func TestNSQ(t *testing.T) {
 
 	// we want to stop consuming once the count of sent and received messages
 	// equals. we need to set a test deadline hence this possibly blocks forever
-	// in case of failed transmission.
+	// in case of failed transmission. we check count every 100ms.
 	msgCount := len(consumerTests)
 	tick := time.Tick(100 * time.Millisecond)
 	go func() {
@@ -106,6 +106,7 @@ func TestNSQ(t *testing.T) {
 	consumer.Run()
 }
 
+// sendMessage is a helper function to send messages to the nsq server.
 func sendMessage(topic string, body []byte) error {
 	httpclient := &http.Client{}
 	endpoint := fmt.Sprintf("http://127.0.0.1:4151/pub?topic=%s", topic)

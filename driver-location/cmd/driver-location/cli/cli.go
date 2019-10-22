@@ -19,7 +19,7 @@ import (
 // Note: We log in (inefficient) human friendly format to console here since it
 // is a coding challenge. In a production environment we would prefer structured,
 // machine parsable format. So we could make use of automated log analysis e.g.
-// error reporting.
+// gcloud error reporting.
 func NewLogger(service, version string) zerolog.Logger {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})

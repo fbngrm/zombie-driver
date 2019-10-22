@@ -7,11 +7,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// HTTPServer represents an http server.
 type HTTPServer struct {
 	server *http.Server
 	logger zerolog.Logger
 }
 
+// New returns an HTTPServer instance with a locationHandler.
 func New(httpAddr string, rf RangeFetcher, logger zerolog.Logger) (*HTTPServer, error) {
 	router, err := newLocationHandler(rf, logger)
 	if err != nil {

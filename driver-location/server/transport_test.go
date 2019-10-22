@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// redis mock to test location handler
 type redisTestClient struct{}
 
 func (r *redisTestClient) FetchRange(key string, min, max int64) ([]string, error) {

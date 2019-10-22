@@ -51,6 +51,7 @@ type RangeFetcher interface {
 	FetchRange(key string, min, max int64) ([]string, error)
 }
 
+// locationHandler respondes to driver location requests.
 type locationHandler struct {
 	RangeFetcher
 }

@@ -58,7 +58,6 @@ type Redis struct {
 }
 
 // NewRedis returns a wrapper around a redis Client instance.
-// Does not require a cicruit breaker.
 func NewRedis(addr string) *Redis {
 	return &Redis{
 		&RedisClient{
