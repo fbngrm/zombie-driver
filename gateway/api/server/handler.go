@@ -16,8 +16,24 @@ import (
 	"github.com/heetch/FabianG-technical-test/middleware"
 	"github.com/heetch/FabianG-technical-test/types"
 	nsq "github.com/nsqio/go-nsq"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
+
+var (
+	responseTimeHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "gateway_response_time",
+			Help:    "histogram of response times for gateway http handlers",
+			Buckets: prometheus.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
+		},
+		[]string{"path", "status_code"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(responseTimeHistogram)
+}
 
 func newGatewayHandler(ctx context.Context, cfg *config.Config, logger zerolog.Logger) (http.Handler, error) {
 	// initialize middleware common to all handlers
@@ -55,6 +71,7 @@ func newHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (http.
 		// we ignore Transfer-Encoding hop-by-hop header; expecting `chunked` to
 		// be applied if required. returns http.StatusBadGateway if backend is
 		// not reachable.
+		// TODO: add circuit-breaker
 		return httputil.NewSingleHostReverseProxy(&url.URL{
 			Scheme: "http",
 			Host:   u.HTTP.Host,

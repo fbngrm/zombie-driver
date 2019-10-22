@@ -11,8 +11,24 @@ import (
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
 	"github.com/heetch/FabianG-technical-test/types"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
+
+var (
+	responseTimeHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "driver_location_response_time",
+			Help:    "histogram of response times for driver-location http handler",
+			Buckets: prometheus.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
+		},
+		[]string{"path", "status_code"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(responseTimeHistogram)
+}
 
 func newLocationHandler(rf RangeFetcher, logger zerolog.Logger) (http.Handler, error) {
 	var mw []middleware.Middleware
