@@ -27,18 +27,6 @@ var inputs = []string{
     method: "GET"`, // second case; one url; missing protocol
 }
 
-type testURL struct {
-	Path   string
-	Method string
-	NSQ    struct {
-		Topic    string
-		TCPAddrs []string
-	}
-	HTTP struct {
-		Host string
-	}
-}
-
 // map expected errors to expected output
 type res struct {
 	u URL
@@ -47,7 +35,7 @@ type res struct {
 }
 
 var cfgtests = []struct {
-	d    string // description
+	d    string // test case description
 	in   string // input
 	want []res  // expected result
 }{
@@ -109,6 +97,7 @@ func TestLoad(t *testing.T) {
 			if w, g := tt.want[i].u, u; !reflect.DeepEqual(w, g) {
 				t.Errorf("%s:\nwant URL:\n%+v\ngot:\n%+v", tt.d, w, g)
 			}
+
 			p, err := u.Protocol()
 			// unexpected error
 			if w, g := tt.want[i].e, err; w == nil && g != nil {

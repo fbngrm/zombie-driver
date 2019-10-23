@@ -25,6 +25,7 @@ type NSQConf struct {
 	Topic    string   `yaml:"topic"`
 	TCPAddrs []string `yaml:"dest_tcp_addr"`
 }
+
 type HTTPConf struct {
 	Host string `yaml:"host"`
 }
@@ -47,11 +48,12 @@ func (u URL) Protocol() (protocol, error) {
 }
 
 // config represents a server configuration read from a YAML file.
-// NOTE: The configuration does not get validated or sanitized.
+// Note, the configuration does not get validated or sanitized.
 type Config struct {
 	URLs []URL `yaml:"urls"`
 }
 
+// FromFile loads a configuration from file.
 func FromFile(cfgpath string) (*Config, error) {
 	f, err := os.Open(cfgpath)
 	if err != nil {

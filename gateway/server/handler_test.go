@@ -17,6 +17,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// urls for test handlers
 var gatewayConf = config.Config{
 	URLs: []config.URL{
 		config.URL{ // nsq
@@ -50,14 +51,14 @@ var gatewayTests = map[string]struct {
 		s: http.StatusBadGateway,
 	},
 	"1": {
-		d: "expect successful proxying",
+		d: "expect successful proxying; #1",
 		z: `{"id":1,"zombie":true}`,
 		p: "/drivers/1",
 		r: `{"id":1,"zombie":true}`,
 		s: http.StatusOK,
 	},
 	"2": {
-		d: "expect successful proxying",
+		d: "expect successful proxying; #2",
 		z: `{"id":2,"zombie":false}`,
 		p: "/drivers/2",
 		r: `{"id":2,"zombie":false}`,
@@ -118,7 +119,7 @@ func TestProxy(t *testing.T) {
 	}))
 	defer zombieService.Close()
 
-	// NOTE: we need to overwrite the URL Host in the test config with the
+	// Note, we need to overwrite the URL Host in the test config with the
 	// address of the test zombieService. The httptest.Server uses a local
 	// Listener initialized to listen on a random port. Using a custom Listener
 	// and providing a port would require supporting `serveFlag` and IPv6.
@@ -136,6 +137,7 @@ func TestProxy(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	// serve test handler
 	gatewayService := httptest.NewServer(h)
 	defer gatewayService.Close()
 	gatewayClient := gatewayService.Client()
@@ -150,7 +152,6 @@ func TestProxy(t *testing.T) {
 			req.Close = true
 			req.Header.Set("Connection", "close")
 
-			// req.Body = ioutil.NopCloser(strings.NewReader(proxytest.p[tc.i]))
 			res, err := gatewayClient.Do(req)
 			if err != nil {
 				t.Fatalf("unexpected error %v", err)
@@ -172,12 +173,12 @@ func TestProxy(t *testing.T) {
 
 var nsqTests = []struct {
 	d string // description of test case
-	b string // body of test test request
+	b string // payload of test test request
 	p string // request path
 	s int    // expected response status code
 }{
 	{
-		d: "expect StatusBadRequest for mal-formatted JSON payload",
+		d: "expect StatusBadRequest for malformatted JSON payload",
 		b: `"id":"0","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/0/locations",
 		s: http.StatusBadRequest,
@@ -193,37 +194,37 @@ var nsqTests = []struct {
 		s: http.StatusNotFound,
 	},
 	{
-		d: "expect StatusOK",
+		d: "expect StatusOK; #1",
 		b: `{"id":"0","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/0/locations",
 		s: http.StatusOK,
 	},
 	{
-		d: "expect StatusOK",
+		d: "expect StatusOK; #2",
 		b: `{"id":"1","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/1/locations",
 		s: http.StatusOK,
 	},
 	{
-		d: "expect StatusOK",
+		d: "expect StatusOK; #3",
 		b: `{"id":"2","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/2/locations",
 		s: http.StatusOK,
 	},
 	{
-		d: "expect StatusOK",
+		d: "expect StatusOK; #4",
 		b: `{"id":"3","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/3/locations",
 		s: http.StatusOK,
 	},
 	{
-		d: "expect StatusOK",
+		d: "expect StatusOK; #5",
 		b: `{"id":"123456789","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/123456789/locations",
 		s: http.StatusOK,
 	},
 	{
-		d: "expect StatusOK",
+		d: "expect StatusOK; #6",
 		b: `{"id":"10000000","latitude":48.864193,"longitude":2.350498}`,
 		p: "/drivers/10000000/locations",
 		s: http.StatusOK,

@@ -53,6 +53,7 @@ func (h *handler) HandleMessage(m *nsq.Message) error {
 	return nil
 }
 
+// test needs to set a timeout
 func TestNSQ(t *testing.T) {
 	// mute logger
 	logger := zerolog.New(ioutil.Discard)

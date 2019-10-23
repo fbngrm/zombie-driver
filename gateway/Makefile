@@ -20,7 +20,7 @@ test-cover:
 	. secrets/.env-test  && go test -race -coverprofile=all.coverage.out -coverpkg=./... $$(go list ./...|grep -v cmd)
 
 test-docker:
-	./test.sh
+	. secrets/.env-test && ../test.sh
 
 lint:
 	docker pull golangci/golangci-lint:latest
