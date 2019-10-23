@@ -14,7 +14,7 @@ var publishTests = map[string]struct {
 	t int64                // input timestamp
 	l types.LocationUpdate // input
 	k string               // expected key
-	m *redis.Z             // expected Z
+	m redis.Z              // expected Z
 }{
 	"0": {
 		d: "expect success; #1",
@@ -25,7 +25,7 @@ var publishTests = map[string]struct {
 			Long:      9.43746775,
 		},
 		k: "0",
-		m: &redis.Z{
+		m: redis.Z{
 			Score:  float64(1257894000),
 			Member: `{"updated_at":"2019-10-15T07:00:07Z","latitude":0.40059538,"longitude":9.43746775}`,
 		},
@@ -39,7 +39,7 @@ var publishTests = map[string]struct {
 			Long:      9.53746775,
 		},
 		k: "1",
-		m: &redis.Z{
+		m: redis.Z{
 			Score:  float64(1257895000),
 			Member: `{"updated_at":"2019-10-15T07:00:07Z","latitude":0.50059538,"longitude":9.53746775}`,
 		},
@@ -48,18 +48,18 @@ var publishTests = map[string]struct {
 
 // range tests by key
 var rangeTests = map[string]struct {
-	d   string          // test case description
-	min int64           // input min score
-	max int64           // input max score
-	k   string          // expected key
-	z   *redis.ZRangeBy // expected range
+	d   string         // test case description
+	min int64          // input min score
+	max int64          // input max score
+	k   string         // expected key
+	z   redis.ZRangeBy // expected range
 }{
 	"0": {
 		d:   "expect success; #1",
 		min: 1257895000,
 		max: 1257891000,
 		k:   "0",
-		z: &redis.ZRangeBy{
+		z: redis.ZRangeBy{
 			Min: "1257895000",
 			Max: "1257891000",
 		},
@@ -69,7 +69,7 @@ var rangeTests = map[string]struct {
 		min: 1257896000,
 		max: 1257896001,
 		k:   "1",
-		z: &redis.ZRangeBy{
+		z: redis.ZRangeBy{
 			Min: "1257896000",
 			Max: "1257896001",
 		},
@@ -80,7 +80,7 @@ type testRedis struct {
 	t *testing.T
 }
 
-func (r *testRedis) ZAddNX(key string, member *redis.Z) error {
+func (r *testRedis) ZAddNX(key string, member redis.Z) error {
 	if w, g := publishTests[key].k, key; w != g {
 		r.t.Errorf("%s: want %s got %s", publishTests[key].d, w, g)
 	}
@@ -90,7 +90,7 @@ func (r *testRedis) ZAddNX(key string, member *redis.Z) error {
 	return nil
 }
 
-func (r *testRedis) ZRangeByScore(key string, opt *redis.ZRangeBy) ([]string, error) {
+func (r *testRedis) ZRangeByScore(key string, opt redis.ZRangeBy) ([]string, error) {
 	if w, g := rangeTests[key].k, key; w != g {
 		r.t.Errorf("%s: want %s got %s", publishTests[key].d, w, g)
 	}

@@ -25,9 +25,9 @@ func init() {
 // mock-library.
 type MiniRedis interface {
 	// add members to the sorted set stored at key
-	ZAddNX(key string, member *redis.Z) error
+	ZAddNX(key string, member redis.Z) error
 	// fetch range from the sorted set stored at key
-	ZRangeByScore(key string, opt *redis.ZRangeBy) ([]string, error)
+	ZRangeByScore(key string, opt redis.ZRangeBy) ([]string, error)
 }
 
 // RedisClient represents a pool of zero or more underlying connections.
@@ -39,7 +39,7 @@ type RedisClient struct {
 // ZAddNX adds all the specified members with the specified scores to the sorted
 // set stored at key. It doesn't update already existing elements but always
 // adds new elements.
-func (rc *RedisClient) ZAddNX(key string, member *redis.Z) error {
+func (rc *RedisClient) ZAddNX(key string, member redis.Z) error {
 	// O(log(N)) for each item added, where N is the number of elements in the
 	// sorted set.
 	return rc.c.ZAddNX(key, member).Err()
@@ -48,7 +48,7 @@ func (rc *RedisClient) ZAddNX(key string, member *redis.Z) error {
 // ZRangeByScore returns all the elements in the sorted set at key with a score
 // between min and max (including elements with score equal to min or max). The
 // elements are considered to be ordered from low to high scores.
-func (rc *RedisClient) ZRangeByScore(key string, opt *redis.ZRangeBy) ([]string, error) {
+func (rc *RedisClient) ZRangeByScore(key string, opt redis.ZRangeBy) ([]string, error) {
 	return rc.c.ZRangeByScore(key, opt).Result()
 }
 
@@ -84,7 +84,7 @@ func (r *Redis) Publish(timestamp int64, key string, l types.LocationUpdate) err
 	}
 	redisExcCounter.With(lb).Inc()
 
-	return r.ZAddNX(key, &member)
+	return r.ZAddNX(key, member)
 }
 
 // FetchRange returns all the elements in the sorted set at key with a score
@@ -101,5 +101,5 @@ func (r *Redis) FetchRange(key string, min, max int64) ([]string, error) {
 	}
 	redisExcCounter.With(lb).Inc()
 
-	return r.ZRangeByScore(key, &opt)
+	return r.ZRangeByScore(key, opt)
 }
