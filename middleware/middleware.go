@@ -28,7 +28,7 @@ func Use(h http.Handler, mws ...Middleware) http.Handler {
 	return h
 }
 
-// NewAuthCheck produces middleware that authenticates the client
+// NewAuthCheck produces middleware that authenticates the client.
 func NewAuthCheck(token string) Middleware {
 	authToken := "Bearer " + token
 	return func(h http.Handler) http.Handler {
@@ -99,14 +99,14 @@ func (rw *statusResponseWriter) WriteHeader(status int) {
 	rw.ResponseWriter.WriteHeader(status)
 }
 
-// MetricsConfig keeps metrics configuration for use by MetricsHandler
+// MetricsConfig keeps metrics configuration for use by MetricsHandler.
 type MetricsConfig struct {
 	reqGauge *prometheus.GaugeVec
 	respCnt  *prometheus.CounterVec
 	reqTime  *prometheus.HistogramVec
 }
 
-// NewMetricsConfig returns a new empty MetricsConfig structure
+// NewMetricsConfig returns a new empty MetricsConfig structure.
 func NewMetricsConfig() *MetricsConfig {
 	return &MetricsConfig{}
 }

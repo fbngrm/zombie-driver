@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// MetricsServer provides an endpoint for a prometheus scraper.
 type MetricsServer struct {
 	cnt    uint64
 	srv    *http.Server

@@ -21,7 +21,7 @@ var (
 	zombieRadius      = kingpin.Flag("zombie-radius", "radius a zombie can move").Envar("ZOMBIE_RADIUS").Required().Float()
 	zombieTime        = kingpin.Flag("zombie-time", "duration for fetching driver locations in minutes").Envar("ZOMBIE_TIME").Default("5").Int()
 
-	// should be greater then prometheus scrape interval (default 30s); decreased in coding challenge
+	// should be greater than prometheus scrape interval (default 30s); decreased in coding challenge
 	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 

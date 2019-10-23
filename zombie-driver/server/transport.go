@@ -13,8 +13,24 @@ import (
 	"github.com/heetch/FabianG-technical-test/handler"
 	"github.com/heetch/FabianG-technical-test/middleware"
 	"github.com/heetch/FabianG-technical-test/types"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
+
+var (
+	responseTimeHistogram = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "gateway_response_time",
+			Help:    "histogram of response times for zombie driver http handlers",
+			Buckets: prometheus.ExponentialBuckets(0.5e-3, 2, 14), // 0.5ms to 4s
+		},
+		[]string{"path", "status_code"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(responseTimeHistogram)
+}
 
 func newZombieHandler(driverLocationURL string, zombieRadius float64, zombieTime int, logger zerolog.Logger) (http.Handler, error) {
 	var mw []middleware.Middleware

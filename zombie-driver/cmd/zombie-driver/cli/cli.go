@@ -14,11 +14,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Using default log level debug and write to stderr.
-// Note: We log in (inefficient) human friendly format to console here since it
-// is a coding challenge. In a production environment we would prefer structured,
-// machine parsable format. So we could make use of automated log analysis e.g.
-// error reporting.
+// Using default log level debug and write to stderr. Note, we log in
+// (inefficient) human friendly format to console here since it is a coding
+// challenge. In a production environment we would prefer structured, machine
+// parsable format. So we could make use of automated log analysis e.g. error
+// reporting.
 func NewLogger(service, version string) zerolog.Logger {
 	logger := zerolog.New(os.Stderr).With().Timestamp().Logger()
 	logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr})

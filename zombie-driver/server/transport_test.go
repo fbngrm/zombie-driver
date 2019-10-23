@@ -27,8 +27,8 @@ func TestHaversine(t *testing.T) {
 
 // testdata by driver ID and minutes
 var zombieTests = map[string]map[int]struct {
-	l  string  // mock response of driver-location
 	d  string  // description of test case
+	l  string  // mock response of driver-location
 	p  string  // request path
 	r  string  // expected response data
 	zr float64 // zombie radius
@@ -93,7 +93,7 @@ var zombieTests = map[string]map[int]struct {
 		},
 	},
 	"5": { // test wrong type of query param id
-		1: { // NOTE: type check of ID query param is performed by router only so we expect 404 instead of 500
+		1: { // Note, type check of ID query param is performed by router so we expect 404 instead of 500
 			l: testdata.Drives[2].Loc, // 466.04m
 			d: "expect StatusNotFound for non-int query param ID",
 			p: "/drivers/invalidIdType",
