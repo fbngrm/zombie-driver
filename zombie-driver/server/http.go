@@ -4,10 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 )
-
 
 type HTTPServer struct {
 	server *http.Server

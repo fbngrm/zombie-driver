@@ -110,7 +110,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(locs)-1; i++ {
 		dist += haversineKm(locs[i].Lat, locs[i].Long, locs[i+1].Lat, locs[i+1].Long)
 	}
-	// NOTE: type check of ID query param is performed by router only
+	// Note, type check of ID query param is performed by router only
 	driverId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
