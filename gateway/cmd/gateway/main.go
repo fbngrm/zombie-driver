@@ -33,7 +33,7 @@ func main() {
 	// configure circuit-breaker
 	hystrix.ConfigureCommand("publish_nsq", hystrix.CommandConfig{
 		Timeout:               1000, // ms
-		MaxConcurrentRequests: 1000,
+		MaxConcurrentRequests: 5000,
 		ErrorPercentThreshold: 25,
 	})
 
