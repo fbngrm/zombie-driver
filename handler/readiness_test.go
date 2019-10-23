@@ -3,8 +3,6 @@ package handler
 import (
 	"net/http/httptest"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 var healthtest = struct {
@@ -26,6 +24,8 @@ func TestHealth(t *testing.T) {
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(tt.m, tt.p, nil)
 		h.ServeHTTP(w, r)
-		require.Equal(t, tt.s, w.Code, tt.d)
+		if w, g := tt.s, w.Code; w != g {
+			t.Errorf("want %d got %d", w, g)
+		}
 	})
 }
