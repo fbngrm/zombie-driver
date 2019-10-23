@@ -3,7 +3,7 @@ COPY . /workspace
 WORKDIR /workspace
 ARG _TAG
 ENV VERSION ${_TAG}
-RUN make build
+WORKDIR make build
 
 FROM debian:stable-slim
 COPY --from=build /workspace/bin/driver-location /bin/driver-location
