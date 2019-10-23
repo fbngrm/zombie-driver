@@ -9,6 +9,7 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 )
 
+<<<<<<< HEAD
 var (
 	redisExcCounter = prom.NewCounterVec(prom.CounterOpts{
 		Name: "redis_commands",
