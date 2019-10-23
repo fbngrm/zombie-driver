@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/heetch/FabianG-technical-test/gateway/api/config"
+	"github.com/heetch/FabianG-technical-test/gateway/config"
 	nsq "github.com/nsqio/go-nsq"
 	"github.com/rs/zerolog"
 )
