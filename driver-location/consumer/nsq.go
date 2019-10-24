@@ -25,17 +25,17 @@ type NSQ struct {
 // NewNSQ returns a ready to use NSQ. It returns an error if consumer
 // initilization or connecting with the nsq server fails.
 func NewNSQ(cfg *NSQConfig, handler nsq.Handler, logger zerolog.Logger) (*NSQ, error) {
-	consumer, err := nsq.NewConsumer(cfg.Topic, cfg.Channel, cfg.Cfg)
+	con, err := nsq.NewConsumer(cfg.Topic, cfg.Channel, cfg.Cfg)
 	if err != nil {
 		return nil, err
 	}
 	// Todo: set logger on consumer
-	consumer.AddConcurrentHandlers(handler, cfg.NumPublishers)
-	err = consumer.ConnectToNSQDs(cfg.NsqdTCPAddrs)
+	con.AddConcurrentHandlers(handler, cfg.NumPublishers)
+	err = con.ConnectToNSQDs(cfg.NsqdTCPAddrs)
 	if err != nil {
 		return nil, err
 	}
-	err = consumer.ConnectToNSQLookupds(cfg.LookupdHTTPAddrs)
+	err = con.ConnectToNSQLookupds(cfg.LookupdHTTPAddrs)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func NewNSQ(cfg *NSQConfig, handler nsq.Handler, logger zerolog.Logger) (*NSQ, e
 		Interface("channel", cfg.Channel).
 		Logger()
 	return &NSQ{
-		c:      consumer,
+		c:      con,
 		cfg:    cfg,
 		logger: logger,
 	}, nil
