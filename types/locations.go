@@ -7,7 +7,7 @@ type Location struct {
 }
 
 type LocationUpdate struct {
-	UpdatedAt string  `json:"updated_at"`
+	UpdatedAt string  `json:"updated_at"` // RFC339
 	Lat       float64 `json:"latitude"`
 	Long      float64 `json:"longitude"`
 }
