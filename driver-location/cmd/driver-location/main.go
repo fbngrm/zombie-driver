@@ -19,16 +19,18 @@ var (
 
 	service     = kingpin.Flag("service", "service name").Envar("SERVICE").Default("driver-location").String()
 	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8081").String()
-	redisAddr   = kingpin.Flag("redis-addr", "address of Redis instance to connect").Envar("REDIS_ADDR").Default(":6379").String()
 	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9103").String()
 
+	// Redis
+	redisAddr = kingpin.Flag("redis-addr", "address of Redis instance to connect").Envar("REDIS_ADDR").Default(":6379").String()
+
 	// NSQ
-	nsqdTCPAddrs     = kingpin.Flag("nsqd-addr", "TCP addresses of NSQ deamon").Envar("NSQD_ADDR").Default(":4150").Strings()
-	lookupdHTTPAddrs = kingpin.Flag("lookupd-http-addr", "HTTP addresses for NSQD lookup").Envar("LOOKUPD_HTTP_ADDRS").Default(":4161").Strings()
-	topic            = kingpin.Flag("topic", "NSQ topic").Envar("TOPIC").Default("locations").String()
-	channel          = kingpin.Flag("channel", "NSQ channel").Envar("CHANNEL").Default("loc-chan").String()
-	numPublishers    = kingpin.Flag("num-publishers", "NSQ publishers").Envar("NUM_PUBLISHERS").Default("100").Int()
-	maxInflight      = kingpin.Flag("max-inflight", "NSQ max inflight").Envar("MAX_INFLIGHT").Default("250").Int()
+	nsqdTCPAddrs        = kingpin.Flag("nsqd-tcp-addrs", "TCP addresses of NSQ deamon").Envar("NSQD_TCP_ADDRS").Required().Strings()
+	nsqLookupdHTTPAddrs = kingpin.Flag("nsqd-lookupd-http-addr", "HTTP addresses for NSQD lookup").Envar("NSQ_LOOKUPD_HTTP_ADDRS").Required().Strings()
+	nsqTopic            = kingpin.Flag("nsqd-topic", "NSQ topic").Envar("NSQ_TOPIC").Required().String()
+	nsqChan             = kingpin.Flag("nsqd-chan", "NSQ channel").Envar("NSQ_CHANNEL").Required().String()
+	nsqNumPublishers    = kingpin.Flag("nsq-num-publishers", "NSQ publishers").Envar("NSQ_NUM_PUBLISHERS").Default("100").Int()
+	nsqMaxInflight      = kingpin.Flag("nsq-max-inflight", "NSQ max inflight").Envar("NSQ_MAX_INFLIGHT").Default("250").Int()
 
 	// should be greater than prometheus scrape interval (default 30s); decreased in coding challenge
 	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay in ms").Envar("SHUTDOWN_DELAY").Default("5000").Int()
@@ -62,12 +64,12 @@ func main() {
 	metricsSrv := metrics.New(*metricsAddr, logger)
 
 	cfg := nsq.NewConfig()
-	cfg.MaxInFlight = *maxInflight
+	cfg.MaxInFlight = *nsqMaxInflight
 	ncfg := &consumer.NSQConfig{
-		NumPublishers:    *numPublishers,
-		Topic:            *topic,
-		Channel:          *channel,
-		LookupdHTTPAddrs: *lookupdHTTPAddrs,
+		NumPublishers:    *nsqNumPublishers,
+		Topic:            *nsqTopic,
+		Channel:          *nsqChan,
+		LookupdHTTPAddrs: *nsqLookupdHTTPAddrs,
 		NsqdTCPAddrs:     *nsqdTCPAddrs,
 		Cfg:              cfg,
 	}
