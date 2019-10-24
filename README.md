@@ -1,4 +1,4 @@
-![zombie](zombie.png =150x)
+![zombie](zombie.png =150px)
 
 ## Test
 
