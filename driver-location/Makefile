@@ -19,8 +19,10 @@ test-cover:
 	rm -f all.coverage.out
 	. secrets/.env-test  && go test -race -coverprofile=all.coverage.out -coverpkg=./... $$(go list ./...|grep -v cmd)
 
+test-docker:
+	. secrets/.env-test && ../test.sh
+
 lint:
 	docker pull golangci/golangci-lint:latest
 	docker run -v`pwd`:/workspace -w /workspace \
         golangci/golangci-lint:latest golangci-lint run ./...
-

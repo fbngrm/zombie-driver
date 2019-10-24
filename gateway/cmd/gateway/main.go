@@ -18,7 +18,7 @@ import (
 var (
 	version = "unkown"
 
-	cfgPath     = kingpin.Flag("config", "path to config file").Envar("CFG_PATH").Default("./config.yaml").String()
+	cfgPath     = kingpin.Flag("cfg-file", "path to config file").Envar("CFG_PATH").Default("./config.yaml").String()
 	service     = kingpin.Flag("service", "service name").Envar("SERVICE").Default("gateway").String()
 	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8080").String()
 	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9102").String()

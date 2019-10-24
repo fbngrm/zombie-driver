@@ -1,0 +1,8 @@
+FROM golang:1 AS build
+COPY . /workspace
+WORKDIR /workspace
+RUN make -C ./driver-location/ build
+
+FROM debian:stable-slim
+COPY --from=build /workspace/driver-location/bin/driver-location /bin/driver-location
+EXPOSE 8081 9103

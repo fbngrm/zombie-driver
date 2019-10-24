@@ -1,22 +1,15 @@
-.PHONY: all test docker driver-location zombie-driver gateway
-
-docker:
-	export HOST_NAME=void
-	docker-compose up
+.PHONY: all build driver-location zombie-driver gateway docker test
+export HOST_NAME=void
 
 all:
-	make -j5 docker driver-location gateway zombie-driver
 
-driver-location:
-	make -C ./driver-location all
+build:
+	make -C ./driver-location build
+	make -C ./gateway build
+	make -C ./zombie-driver build
 
-gateway:
-	make -C ./gateway all
-
-zombie-driver:
-	make -C ./zombie-driver all
+docker:
+	docker-compose up
 
 test:
-	make -C ./driver-location test
-	make -C ./gateway test
-	make -C ./zombie-driver test
+	./test.sh

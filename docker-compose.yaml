@@ -16,6 +16,8 @@ services:
   nsqd:
     image: nsqio/nsq:v0.3.8
     command: /nsqd --lookupd-tcp-address=nsqlookupd:4160 --broadcast-address=${HOST_NAME}
+    depends_on:
+      - nsqlookupd
     links:
       - nsqlookupd:nsqlookupd
     ports:
@@ -26,6 +28,55 @@ services:
     image: nsqio/nsq:v0.3.8
     ports:
       - "4171:4171"
+    depends_on:
+      - nsqlookupd
     links:
       - nsqlookupd:nsqlookupd
     command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+
+  driver-location:
+    build:
+      context: .
+      dockerfile: Dockerfile.dl
+    ports:
+      - "8081:8081"
+      - "9103:9103"
+    depends_on:
+      - nsqlookupd
+      - nsqd
+      - redis
+    environment:
+      NSQD_TCP_ADDRS: "nsqd:4150"
+      NSQ_LOOKUPD_HTTP_ADDRS: "nsqlookupd:4161"
+      NSQ_TOPIC: "locations"
+      NSQ_CHAN: "loc-chan"
+      REDIS_ADDR: "redis:6379"
+    command: /bin/driver-location
+
+  zombie-driver:
+    build:
+      context: .
+      dockerfile: Dockerfile.zd
+    depends_on:
+      - driver-location
+    environment:
+      DRIVER_LOCATION_URL: "http://driver-location:8081/drivers/%s/locations?minutes=%d"
+      ZOMBIE_RADIUS: 500
+      ZOMBIE_TIME: 5
+    ports:
+      - "8082:8082"
+      - "9104:9104"
+    command: /bin/zombie-driver
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.ga
+    depends_on:
+      - zombie-driver
+      - driver-location
+    ports:
+      - "8080:8080"
+      - "9102:9102"
+    command: /bin/gateway --cfg-file=/config/config.yaml
+

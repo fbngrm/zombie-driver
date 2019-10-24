@@ -5,9 +5,9 @@ urls:
     nsq:
       topic: "locations"
       dest_tcp_addr:
-          - "127.0.0.1:4150"
+          - "nsqd:4150"
   -
     path: "/drivers/{id:[0-9]+}"
     method: "GET"
     http:
-      host: "127.0.0.1:8082"
+      host: "zombie-driver:8082"
