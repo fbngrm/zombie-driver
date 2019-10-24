@@ -1,4 +1,4 @@
-![Heetch](heetch.png)
+![zombie](zombie.png =150x)
 
 ## Test
 
@@ -160,3 +160,5 @@ We will then write a review for your pull request!
 - Add whatever you think is necessary to make the app awesome ✨
 
 ⚠️ Do not add your vendors to the git repository. ⚠️
+
+
