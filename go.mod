@@ -11,5 +11,5 @@ require (
 	github.com/prometheus/client_golang v1.2.1
 	github.com/rs/zerolog v1.15.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.4
 )
