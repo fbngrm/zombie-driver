@@ -11,8 +11,8 @@ Additional functionality is:
 
 ## Setup
 This section assumes there is a go, docker, make and git installation available on the system.
-Check your installation:
 
+To check your installation, run: 
 
     go version
     docker version
@@ -37,7 +37,7 @@ If this does not solve the issue please open an issue here.
 ## Usage
 Makefiles are provided which should be used to test, build and run the services separately or all at once.
 The services and backing services are started in a docker container.
-The configuration resides in the (docker-compose file)[https://github.com/heetch/FabianG-technical-test/blob/development/docker-compose.yaml].
+The configuration resides in the [docker-compose file](https://github.com/heetch/FabianG-technical-test/blob/development/docker-compose.yaml).
 The Dockerfiles used to build images are located in the project root.
 
 
@@ -90,15 +90,14 @@ Alternatively, provide arguments to the command directly.
 
 ### gateway
 
-| Arg                        | ENV            |                           | Required |
-|----------------------------|:--------------:|--------------------------:|----------|
-| --cfg-file="./config.yaml" | CFG_FILE       | path to config file       | True     |
-| --http-addr=":8080"        | HTTP_ADDR      | address of HTTP server    | True     |
-| --metrics-addr=":9102"     | METRICS_ADDR   | address of metrics server | True     |
-| --service="gateway"        | SERVICE        | service name              | False    |
-| --shutdown-delay=5000      | SHUTDOWN_DELAY | shutdown delay            | False    |
-| --version                  |                | Show application version  | False    |
-
+| Arg              | ENV            | default |                           | Required |
+|------------------|----------------|---------|---------------------------|----------|
+| --cfg-file       | CFG_FILE       |         | path to config file       | True     |
+| --http-addr      | HTTP_ADDR      |         | address of HTTP server    | True     |
+| --metrics-addr   | METRICS_ADDR   |         | address of metrics server | True     |
+| --service        | SERVICE        | gateway | service name              | False    |
+| --shutdown-delay | SHUTDOWN_DELAY | 5000    | shutdown delay in ms      | False    |
+| --version        |                |         | Show application version  | False    |
 
 ### Bugs
 Setting logger on nsq producers and consumers.
