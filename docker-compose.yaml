@@ -60,7 +60,7 @@ services:
     depends_on:
       - driver-location
     environment:
-      DRIVER_LOCATION_URL: "http://driver-location:8081/drivers/%s/locations?minutes=%d"
+      DRIVER_LOCATION_URL: "http://driver-location:8081/drivers/%s/locations?minutes=%d" # todo: don't use format string
       ZOMBIE_RADIUS: 500
       ZOMBIE_TIME: 5
     ports:
@@ -79,4 +79,3 @@ services:
       - "8080:8080"
       - "9102:9102"
     command: /bin/gateway --cfg-file=/config/config.yaml
-
