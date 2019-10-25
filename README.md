@@ -1,15 +1,21 @@
 ![zombie](zombie-150.png)
 
+## Implementation
 This branch implements the requirements defined in the [task](https://github.com/heetch/FabianG-technical-test/blob/development/REQUIREMENTS.md) description.
 Additional functionality is:
 
-* configuration via env variables or command-line args
-* instrumentation
-* circuit-breaker
-* docker containers
-* configurable zombie-driver identification `Predicate/business rules`
+* Configuration via ENV variables or command-line args
+* Instrumentation
+* Circuit-breaker
+* Docker containers
+* Configurable zombie-driver identification `Predicate/business rules`
 
-## Setup
+This document is organized in two sections:
+
+* Documentation - describes setup and usage
+* Architecture - describes my design and architecture approach
+
+## Documentation
 This section assumes there is a go, docker, make and git installation available on the system.
 
 To check your installation, run: 
@@ -97,14 +103,14 @@ Alternatively, provide arguments to the command directly.
 | --metrics-addr   | METRICS_ADDR   |         | address of metrics server | True     |
 | --service        | SERVICE        | gateway | service name              | False    |
 | --shutdown-delay | SHUTDOWN_DELAY | 5000    | shutdown delay in ms      | False    |
-| --version        |                |         | Show application version  | False    |
+| --version        |                |         | show application version  | False    |
 
 ### Bugs
 Setting logger on nsq producers and consumers.
 The logger used in the project does not implement the required interface to be used in nsq.
 Thus, logs are a bit polluted.
 
-## Architecture approach
+## Architecture
 I mostly followed the go [conventions](https://golang.org/doc/code.html) and [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
 
 The interfaces are kept small to bigger the abstraction.
@@ -113,7 +119,7 @@ They are more meaningful if they are used outside the scope they were defined.
 Errors are used as values.
 
 Furthermore, I followed the dependency injection and fail early approach, with very few exceptions.
-Components are provided all dependencies they need during instanciation.
+Components are provided all dependencies they need during instantiation.
 The result is either a functioning instance or an error.
 On application start-up and error results in termination.
 Runtime errors do not lead to a crash or panic.
@@ -126,10 +132,10 @@ Though, there is a configurable shutdown timeout, which may prevent this.
 
 ### Instrumentation
 Only response time metrics and redis method calls are collected as an example of instrumentation.
-In a real world application the run time behavior would be monitored in a more detailed way.
+In a real world application the runtime behavior would be monitored in a more detailed way.
 Prometheus is used for aggregating the metrics, which are provided by an http handler to be scraped by an prometheus collector.
 A graceful shutdown of the server ensures that the metrics will be scraped eventually by checking against an access counter.
-Though, there is a configurable shutdown timeout which prevents this from being guaranteed.
+Though, the shutdown timeout which prevents this from being guaranteed.
 
 ### Tests
 I wrote unit tests for core functionality, things expected to break and for edge/error cases.
@@ -162,25 +168,22 @@ This requires a refactoring of the middleware which is out-of-scope during this 
 Note, that is no circuit-breaker applied in the [gateway HTTP proxy handler](https://github.com/heetch/FabianG-technical-test/blob/development/gateway/server/handler.go#L68-L78).
 
 ### (Zombie) Workflow
-Since I am the only contributer (except for initial commits) and there will be a single PR, I followed a rather pragmatic git workflow.
-I mostly implemented features in separate branches though. In the beginning.
+Since I am the only contributer (except for initial commits) and there will be a single PR, I followed a rather "pragmatic" git workflow.
+I implemented features in separate branches in the beginning but stopped to continue this at some point.
 
 ## Todo
-* fix nsq logging
-* fix driver-location url in zombie-driver config
-* prometheus scraper + dashboard
-* https (gateway, nsq)
-* authentication/sessions
-* load testing
-* tracing
-* rewrite middleware
-* custom proxy/circuit-breaker
-* benchmarks
-* resilience
-* load-balancer
-
-## License
--
+* Fix NSQ logging
+* Fix driver-location URL in zombie-driver config (no format string)
+* Prometheus scraper + dashboard
+* HTTPS (gateway, NSQ)
+* Authentication/sessions
+* Load testing
+* Tracing
+* Rewrite middleware
+* Custom proxy/circuit-breaker
+* Benchmarks
+* Resilience
+* Load-balancer
 
 ---
 
