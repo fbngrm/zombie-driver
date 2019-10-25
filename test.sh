@@ -7,14 +7,14 @@ echo "  logging to $NSQD_LOGFILE"
 
 export HOST_NAME=void
 
-docker-compose --file ./docker-compose.yaml up >$NSQD_LOGFILE 2>&1 &
+docker-compose up redis nsqd nsqlookupd >$NSQD_LOGFILE 2>&1 &
 
 NSQD_PID=$!
 echo "started nsqd PID $NSQD_PID"
 
-sleep 1
+sleep 2
 
-go test -v -timeout 60s ./...
+go test -v $@ ./...
 
 cleanup() {
     echo "killing nsqd PID $NSQD_PID"

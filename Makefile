@@ -1,15 +1,30 @@
-.PHONY: all build driver-location zombie-driver gateway docker test
+.PHONY: all build up test test-race test-cover lint
+
 export HOST_NAME=void
 
-all:
+all: build
 
 build:
-	make -C ./driver-location build
-	make -C ./gateway build
-	make -C ./zombie-driver build
+	make -C driver-location/ all
+	make -C gateway/ all
+	make -C zombie-driver/ all
 
-docker:
+up:
 	docker-compose up
 
 test:
-	./test.sh
+	./test.sh -timeout=1m
+
+test-race:
+	./test.sh -race -timeout=2m
+
+test-cover:
+	rm -f all.coverage.out
+	./test.sh -race -timeout=2m \
+		-coverprofile=all.coverage.out \
+		-coverpkg=./... $$(go list ./...|grep -v cmd)
+
+lint:
+	docker pull golangci/golangci-lint:latest
+	docker run -v`pwd`:/workspace -w /workspace \
+        golangci/golangci-lint:latest golangci-lint run ./...
