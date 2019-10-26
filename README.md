@@ -8,15 +8,17 @@ Additional functionality is:
 * Instrumentation
 * Circuit-breaker
 * Docker containers
+* Structured logging
 * Configurable zombie-driver identification `Predicate/business rules`
 
 This document is organized in two sections:
 
 * Documentation - describes setup and usage
-* Architecture - describes my design and architecture approach
+* Architecture - describes the design and architecture approach
 
 # Documentation
-## Setup
+
+### Setup
 This section assumes there is a go, docker, make and git installation available on the system.
 
 To check your installation, run: 
@@ -35,7 +37,7 @@ Fetch the repo from GitHub:
     go get
 
 
-### Dependency management
+##### Dependency management
 For handling dependencies, go modules are used.
 This requires to have a go version > 1.11 installed and setting `GO111MODULE=1`.
 If the go version is >= 1.13, modules are enabled by default.
@@ -43,31 +45,31 @@ There might be steps required to access private repositories.
 If you have problems setting up or building the project which are related to modules, please consider reading up the [documentation](https://github.com/golang/go/wiki/Modules).
 If this does not solve the issue please open an issue here.
 
-## Usage
+### Usage
 Makefiles are provided which should be used to test, build and run the services separately or all at once.
 The services and backing services are started in a docker container.
-The configuration resides in the [docker-compose file](https://github.com/heetch/FabianG-technical-test/blob/development/docker-compose.yaml).
+The configuration resides in the [docker-compose](https://github.com/heetch/FabianG-technical-test/blob/development/docker-compose.yaml) file.
 The Dockerfiles used to build images are located in the project root.
 
 
-### Using make
+##### Using make
 The services and backing services are started in a docker container.
 
-#### Build
-Builds will be located in the `/bin` sub-directory of each service.
+###### Build
+Builds will be located in the `/bin` sub-directory of each service. Binaries will use the latest git commit or tag as a version.
 
 
     make all # builds all services
 
 
-#### Run
+###### Run
 Services are intended to be ran in a docker container.
 
 
     make up # builds docker containers and runs all services and backing services
 
 
-#### Tests
+###### Tests
 There are several targets available to run tests.
 
 
@@ -76,14 +78,14 @@ There are several targets available to run tests.
     make test-race # tests services for race conditions
 
 
-#### Lint
+###### Lint
 There is a lint target which runs golangci-lint in a docker container.
 
 
     make lint
 
 
-#### Service level
+###### Service level
 Except for `up`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
@@ -91,13 +93,13 @@ Run the make command from the respective service directory or use the `-C` argum
     make -C <service_name> all # builds <service_name>
 
 
-## Configuration
+### Configuration
 Services can be configured by parameters or environment variables.
-For configuring the services via env variables use the `docker-compose.yaml`.
+For configuring the services via env variables use the docker-compose file.
 Alternatively, provide arguments to the command directly.
 
 
-### gateway
+##### gateway
 
 | Arg              | ENV            | default |                           | Required |
 |------------------|----------------|---------|---------------------------|----------|
@@ -108,25 +110,25 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay | SHUTDOWN_DELAY | 5000    | shutdown delay in ms      | False    |
 | --version        |                |         | show application version  | False    |
 
-### driver-location
+##### driver-location
 
-| Arg                      | ENV                    | default         |                                | Required |
-|--------------------------|------------------------|-----------------|--------------------------------|----------|
-| --cfg-file               | CFG_FILE               |                 | path to config file            | True     |
-| --http-addr              | HTTP_ADDR              |                 | address of HTTP server         | True     |
-| --metrics-addr           | METRICS_ADDR           |                 | address of metrics server      | True     |
-| --redis-addr             | REDIS_ADDR             |                 | address of metrics server      | True     |
-| --nsqd-tcp-addrs         | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
-| --nsqd-lookupd-http-addr | NSQ_LOOKUPD_HTTP_ADDRS |                 | HTTP addresses for NSQD lookup | True     |
-| --nsqd-topic             | NSQ_TOPIC              |                 | NSQ topic                      | True     |
-| --nsqd-chan              | NSQ_CHAN               |                 | NSQ channel                    | True     |
-| --nsq-num-publishers     | NSQ_NUM_PUBLISHERS     | 100             | NSQ publishers                 | False    |
-| --nsq-max-inflight       | NSQ_MAX_INFLIGHT       | 250             | NSQ max inflight               | False    |
-| --service                | SERVICE                | driver-location | service name                   | False    |
-| --shutdown-delay         | SHUTDOWN_DELAY         | 5000            | shutdown delay in ms           | False    |
-| --version                |                        |                 | show application version       | False    |
+| Arg                       | ENV                    | default         |                                | Required |
+|---------------------------|------------------------|-----------------|--------------------------------|----------|
+| --cfg-file                | CFG_FILE               |                 | path to config file            | True     |
+| --http-addr               | HTTP_ADDR              |                 | address of HTTP server         | True     |
+| --metrics-addr            | METRICS_ADDR           |                 | address of metrics server      | True     |
+| --redis-addr              | REDIS_ADDR             |                 | address of metrics server      | True     |
+| --nsqd-tcp-addrs          | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
+| --nsqd-lookupd-http-addrs | NSQ_LOOKUPD_HTTP_ADDRS |                 | HTTP addresses for NSQD lookup | True     |
+| --nsqd-topic              | NSQ_TOPIC              |                 | NSQ topic                      | True     |
+| --nsqd-chan               | NSQ_CHAN               |                 | NSQ channel                    | True     |
+| --nsq-num-publishers      | NSQ_NUM_PUBLISHERS     | 100             | NSQ publishers                 | False    |
+| --nsq-max-inflight        | NSQ_MAX_INFLIGHT       | 250             | NSQ max inflight               | False    |
+| --service                 | SERVICE                | driver-location | service name                   | False    |
+| --shutdown-delay          | SHUTDOWN_DELAY         | 5000            | shutdown delay in ms           | False    |
+| --version                 |                        |                 | show application version       | False    |
 
-### zombie-driver
+##### zombie-driver
 
 | Arg                   | ENV                 | default       |                                             | Required |
 |-----------------------|---------------------|---------------|---------------------------------------------|----------|
@@ -139,6 +141,8 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay      | SHUTDOWN_DELAY      | 5000          | shutdown delay in ms                        | False    |
 | --version             |                     |               | show application version                    | False    |
 
+##### Logging
+The current setup uses a human friendly logging format. Service loggers attach the service name and version ID to the log output.
 
 ### Bugs
 Setting logger on nsq producers and consumers.
@@ -183,10 +187,10 @@ Regarding a few error cases, test coverage should be increased though.
 
 Tests that require and nsq server use a helper script to start and shutdown a docker instance in the background but stream logs to a file to not obfuscate test log.
 
-#### Testdata
+##### Testdata
 There is a testdata directory which provides slightly realistic sample data used in most tests.
 
-#### Redis
+##### Redis
 Since there are two redis commands used only, I implemented an interface to provide a simple mock in tests.
 This requires an extra layer of abstraction which could be avoided using a redis mock library.
 If there will be more commands used, I would prefer to add a dependency and remove the abstraction.
@@ -196,7 +200,7 @@ In general, the code is written in a way to use as few dependencies as possible 
 This applies also for tests, where no external libraries are used since they mostly do not provide significant advantages but may obfuscate clear readability.
 This especially applies to BDD (Behavioral Driven Design/Development) test libraries, which often introduce test-induced design damage by needless indirection and conceptual overhead.
 
-#### Shared libraries
+##### Shared libraries
 There are a few shared libraries at the project root which are used in all three services.
 I would tend to move each service to an own repo and copy over the library code along.
 Although, using go modules with versioning, providing the ability to update incrementally, makes it easier to handle shared libraries.
@@ -211,7 +215,7 @@ Since I am the only contributer (except for initial commits) and there will be a
 I implemented features in separate branches in the beginning but stopped to continue this at some point.
 I am aware that this flow is not teamwork compatible.
 
-## Todo
+### Todo
 * Fix NSQ logging
 * Fix driver-location URL in zombie-driver config (no format string)
 * Prometheus scraper + dashboard
