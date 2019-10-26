@@ -26,7 +26,7 @@ var (
 
 	// NSQ
 	nsqdTCPAddrs        = kingpin.Flag("nsqd-tcp-addrs", "TCP addresses of NSQ deamon").Envar("NSQD_TCP_ADDRS").Required().Strings()
-	nsqLookupdHTTPAddrs = kingpin.Flag("nsqd-lookupd-http-addr", "HTTP addresses for NSQD lookup").Envar("NSQ_LOOKUPD_HTTP_ADDRS").Required().Strings()
+	nsqLookupdHTTPAddrs = kingpin.Flag("nsqd-lookupd-http-addrs", "HTTP addresses for NSQD lookup").Envar("NSQ_LOOKUPD_HTTP_ADDRS").Required().Strings()
 	nsqTopic            = kingpin.Flag("nsqd-topic", "NSQ topic").Envar("NSQ_TOPIC").Required().String()
 	nsqChan             = kingpin.Flag("nsqd-chan", "NSQ channel").Envar("NSQ_CHAN").Required().String()
 	nsqNumPublishers    = kingpin.Flag("nsq-num-publishers", "NSQ publishers").Envar("NSQ_NUM_PUBLISHERS").Default("100").Int()

@@ -110,21 +110,21 @@ Alternatively, provide arguments to the command directly.
 
 ### driver-location
 
-| Arg                      | ENV                    | default         |                                | Required |
-|--------------------------|------------------------|-----------------|--------------------------------|----------|
-| --cfg-file               | CFG_FILE               |                 | path to config file            | True     |
-| --http-addr              | HTTP_ADDR              |                 | address of HTTP server         | True     |
-| --metrics-addr           | METRICS_ADDR           |                 | address of metrics server      | True     |
-| --redis-addr             | REDIS_ADDR             |                 | address of metrics server      | True     |
-| --nsqd-tcp-addrs         | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
-| --nsqd-lookupd-http-addr | NSQ_LOOKUPD_HTTP_ADDRS |                 | HTTP addresses for NSQD lookup | True     |
-| --nsqd-topic             | NSQ_TOPIC              |                 | NSQ topic                      | True     |
-| --nsqd-chan              | NSQ_CHAN               |                 | NSQ channel                    | True     |
-| --nsq-num-publishers     | NSQ_NUM_PUBLISHERS     | 100             | NSQ publishers                 | False    |
-| --nsq-max-inflight       | NSQ_MAX_INFLIGHT       | 250             | NSQ max inflight               | False    |
-| --service                | SERVICE                | driver-location | service name                   | False    |
-| --shutdown-delay         | SHUTDOWN_DELAY         | 5000            | shutdown delay in ms           | False    |
-| --version                |                        |                 | show application version       | False    |
+| Arg                       | ENV                    | default         |                                | Required |
+|---------------------------|------------------------|-----------------|--------------------------------|----------|
+| --cfg-file                | CFG_FILE               |                 | path to config file            | True     |
+| --http-addr               | HTTP_ADDR              |                 | address of HTTP server         | True     |
+| --metrics-addr            | METRICS_ADDR           |                 | address of metrics server      | True     |
+| --redis-addr              | REDIS_ADDR             |                 | address of metrics server      | True     |
+| --nsqd-tcp-addrs          | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
+| --nsqd-lookupd-http-addrs | NSQ_LOOKUPD_HTTP_ADDRS |                 | HTTP addresses for NSQD lookup | True     |
+| --nsqd-topic              | NSQ_TOPIC              |                 | NSQ topic                      | True     |
+| --nsqd-chan               | NSQ_CHAN               |                 | NSQ channel                    | True     |
+| --nsq-num-publishers      | NSQ_NUM_PUBLISHERS     | 100             | NSQ publishers                 | False    |
+| --nsq-max-inflight        | NSQ_MAX_INFLIGHT       | 250             | NSQ max inflight               | False    |
+| --service                 | SERVICE                | driver-location | service name                   | False    |
+| --shutdown-delay          | SHUTDOWN_DELAY         | 5000            | shutdown delay in ms           | False    |
+| --version                 |                        |                 | show application version       | False    |
 
 ### zombie-driver
 
