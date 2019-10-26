@@ -18,13 +18,13 @@ import (
 var (
 	version = "unkown"
 
-	cfgPath     = kingpin.Flag("cfg-file", "path to config file").Envar("CFG_PATH").Default("./config.yaml").String()
+	cfgPath     = kingpin.Flag("cfg-file", "path to config file").Envar("CFG_PATH").Required().String()
+	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Required().String()
+	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Required().String()
 	service     = kingpin.Flag("service", "service name").Envar("SERVICE").Default("gateway").String()
-	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8080").String()
-	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9102").String()
 
 	// should be greater than prometheus scrape interval (default 30s); decreased in coding challenge
-	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay").Envar("SHUTDOWN_DELAY").Default("5000").Int()
+	shutdownDelay = kingpin.Flag("shutdown-delay", "shutdown delay in ms").Envar("SHUTDOWN_DELAY").Default("5000").Int()
 )
 
 func main() {
