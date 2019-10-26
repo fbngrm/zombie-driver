@@ -148,6 +148,53 @@ Setting logger on NSQ producers and consumers.
 The logger used in the project does not implement the required interface to be used in NSQ.
 Thus, logs are a bit polluted.
 
+### Example
+Run a basic example from the project root:
+
+    # start all services in a docker container
+    make up
+
+    # publish a location via the gateway service
+    curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.350498}' 'http://127.0.0.1:8080/drivers/1/locations'
+
+    # check success via the internal driver-location service directly; response data may differ
+    curl --request GET -i 'http://127.0.0.1:8081/drivers/1/locations?minutes=5'
+
+    HTTP/1.1 200 OK
+    Content-Type: application/json
+    Request-Id: bmq2dd790i5m92bn2gdg
+    Date: Sat, 26 Oct 2019 10:57:56 GMT
+    Content-Length: 83
+
+    [{"updated_at":"2019-10-26T10:57:38Z","latitude":48.864193,"longitude":20.350498}]
+
+    # zombie check via the gateway service; reponse data may differ
+    curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
+
+    HTTP/1.1 200 OK
+    Content-Length: 23
+    Content-Type: application/json
+    Date: Sat, 26 Oct 2019 11:06:56 GMT
+    Request-Id: bmq2hk790i5q0u9t1pog
+    Request-Id: bmq2hk790i5ub07vlkjg
+
+    {"id":1,"zombie":true}
+
+    # publish more data
+    curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.450498}' 'http://127.0.0.1:8080/drivers/1/locations'
+
+    # zombie check again
+    curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
+    HTTP/1.1 200 OK
+    Content-Length: 24
+    Content-Type: application/json
+    Date: Sat, 26 Oct 2019 11:09:00 GMT
+    Request-Id: bmq2ij790i5q0u9t1ppg
+    Request-Id: bmq2ij790i5ub07vlkk0
+
+    {"id":1,"zombie":false}
+
+
 # Architecture
 I mostly followed the go [conventions](https://golang.org/doc/code.html) and [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
 
