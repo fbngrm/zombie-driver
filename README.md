@@ -25,19 +25,20 @@ This section assumes there is a go, docker, make and git installation available 
 
 To check your installation, run:
 
+```bash
     go version
     docker version
     make --version
     git version
-
+```
 
 Fetch the repo from GitHub:
 
-
+```bash
     git clone git@github.com:heetch/FabianG-technical-test.git
     cd FabianG-technical-test
     go get
-
+```
 
 ##### Dependency management
 For handling dependencies, go modules are used.
@@ -57,40 +58,40 @@ The Dockerfiles used to build images are located in the project root.
 ###### Build
 Builds will are located in the `/bin` sub-directory of each service. Binaries use the latest git commit hash or tag as a version.
 
-
+```bash
     make all # builds all services
-
+```
 
 ###### Run
 Services are intended to be ran in a docker container.
 
-
+```bash
     make up # builds docker containers and runs all services and backing services
-
+```
 
 ###### Tests
 There are several targets available to run tests.
 
-
+```bash
     make test # runs tests for all services
     make test-cover # creates coverage profiles for all services
     make test-race # tests services for race conditions
-
+```
 
 ###### Lint
 There is a lint target which runs [golangci-lint](https://github.com/golangci/golangci-lint) in a docker container.
 
-
+```bash
     make lint
-
+```
 
 ###### Service level
 Except for `up`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
-
+```bash
     make -C <service_name> all # builds <service_name>
-
+```
 
 ### Configuration
 Services can be configured by parameters or environment variables.
@@ -152,48 +153,48 @@ Thus, logs are a bit polluted.
 Run a basic example from the project root:
 
 ```bash
-    # start all services in a docker container
-    make up
+# start all services in a docker container
+make up
 
-    # publish a location via the gateway service
-    curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.350498}' 'http://127.0.0.1:8080/drivers/1/locations'
+# publish a location via the gateway service
+curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.350498}' 'http://127.0.0.1:8080/drivers/1/locations'
 
-    # check success via the internal driver-location service directly; response data may differ
-    curl --request GET -i 'http://127.0.0.1:8081/drivers/1/locations?minutes=5'
+# check success via the internal driver-location service directly; response data may differ
+curl --request GET -i 'http://127.0.0.1:8081/drivers/1/locations?minutes=5'
 
-    HTTP/1.1 200 OK
-    Content-Type: application/json
-    Request-Id: bmq2dd790i5m92bn2gdg
-    Date: Sat, 26 Oct 2019 10:57:56 GMT
-    Content-Length: 83
+HTTP/1.1 200 OK
+Content-Type: application/json
+Request-Id: bmq2dd790i5m92bn2gdg
+Date: Sat, 26 Oct 2019 10:57:56 GMT
+Content-Length: 83
 
-    [{"updated_at":"2019-10-26T10:57:38Z","latitude":48.864193,"longitude":20.350498}]
+[{"updated_at":"2019-10-26T10:57:38Z","latitude":48.864193,"longitude":20.350498}]
 
-    # zombie check via the gateway service; reponse data may differ
-    curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
+# zombie check via the gateway service; reponse data may differ
+curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
 
-    HTTP/1.1 200 OK
-    Content-Length: 23
-    Content-Type: application/json
-    Date: Sat, 26 Oct 2019 11:06:56 GMT
-    Request-Id: bmq2hk790i5q0u9t1pog
-    Request-Id: bmq2hk790i5ub07vlkjg
+HTTP/1.1 200 OK
+Content-Length: 23
+Content-Type: application/json
+Date: Sat, 26 Oct 2019 11:06:56 GMT
+Request-Id: bmq2hk790i5q0u9t1pog
+Request-Id: bmq2hk790i5ub07vlkjg
 
-    {"id":1,"zombie":true}
+{"id":1,"zombie":true}
 
-    # publish more data
-    curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.450498}' 'http://127.0.0.1:8080/drivers/1/locations'
+# publish more data
+curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.450498}' 'http://127.0.0.1:8080/drivers/1/locations'
 
-    # zombie check again
-    curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
-    HTTP/1.1 200 OK
-    Content-Length: 24
-    Content-Type: application/json
-    Date: Sat, 26 Oct 2019 11:09:00 GMT
-    Request-Id: bmq2ij790i5q0u9t1ppg
-    Request-Id: bmq2ij790i5ub07vlkk0
+# zombie check again
+curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
+HTTP/1.1 200 OK
+Content-Length: 24
+Content-Type: application/json
+Date: Sat, 26 Oct 2019 11:09:00 GMT
+Request-Id: bmq2ij790i5q0u9t1ppg
+Request-Id: bmq2ij790i5ub07vlkk0
 
-    {"id":1,"zombie":false}
+{"id":1,"zombie":false}
 ```
 
 # Architecture
