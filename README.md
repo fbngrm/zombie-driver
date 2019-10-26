@@ -1,6 +1,6 @@
 ![zombie](zombie-150.png)
 
-## Implementation
+# Implementation
 This branch implements the requirements defined in the [task](https://github.com/heetch/FabianG-technical-test/blob/development/REQUIREMENTS.md) description.
 Additional functionality is:
 
@@ -15,7 +15,8 @@ This document is organized in two sections:
 * Documentation - describes setup and usage
 * Architecture - describes my design and architecture approach
 
-## Documentation
+# Documentation
+## Setup
 This section assumes there is a go, docker, make and git installation available on the system.
 
 To check your installation, run: 
@@ -30,6 +31,8 @@ Fetch the repo from GitHub:
 
 
     git clone git@github.com:heetch/FabianG-technical-test.git
+    cd FabianG-technical-test
+    go get
 
 
 ### Dependency management
@@ -80,7 +83,7 @@ There is a lint target which runs golangci-lint in a docker container.
     make lint
 
 
-#### Run on a service level
+#### Service level
 Except for `up`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
@@ -88,7 +91,7 @@ Run the make command from the respective service directory or use the `-C` argum
     make -C <service_name> all # builds <service_name>
 
 
-## Services
+## Configuration
 Services can be configured by parameters or environment variables.
 For configuring the services via env variables use the `docker-compose.yaml`.
 Alternatively, provide arguments to the command directly.
@@ -105,12 +108,44 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay | SHUTDOWN_DELAY | 5000    | shutdown delay in ms      | False    |
 | --version        |                |         | show application version  | False    |
 
+### driver-location
+
+| Arg                      | ENV                    | default         |                                | Required |
+|--------------------------|------------------------|-----------------|--------------------------------|----------|
+| --cfg-file               | CFG_FILE               |                 | path to config file            | True     |
+| --http-addr              | HTTP_ADDR              |                 | address of HTTP server         | True     |
+| --metrics-addr           | METRICS_ADDR           |                 | address of metrics server      | True     |
+| --redis-addr             | REDIS_ADDR             |                 | address of metrics server      | True     |
+| --nsqdTCPAddrs           | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
+| --nsqd-lookupd-http-addr | NSQ_LOOKUPD_HTTP_ADDRS |                 | HTTP addresses for NSQD lookup | True     |
+| --nsqd-topic             | NSQ_TOPIC              |                 | NSQ topic                      | True     |
+| --nsqd-chan              | NSQ_CHAN               |                 | NSQ channel                    | True     |
+| --nsq-num-publishers     | NSQ_NUM_PUBLISHERS     | 100             | NSQ publishers                 | False    |
+| --nsq-max-inflight       | NSQ_MAX_INFLIGHT       | 250             | NSQ max inflight               | False    |
+| --service                | SERVICE                | driver-location | service name                   | False    |
+| --shutdown-delay         | SHUTDOWN_DELAY         | 5000            | shutdown delay in ms           | False    |
+| --version                |                        |                 | show application version       | False    |
+
+### zombie-driver
+
+| Arg                   | ENV                 | default       |                                             | Required |
+|-----------------------|---------------------|---------------|---------------------------------------------|----------|
+| --http-addr           | HTTP_ADDR           |               | address of HTTP server                      | True     |
+| --metrics-addr        | METRICS_ADDR        |               | address of metrics server                   | True     |
+| --driver-location-url | DRIVER_LOCATION_URL |               | address of driver-location service          | True     |
+| --zombie-radius       | ZOMBIE_RADIUS       |               | radius a zombie can move                    | True     |
+| --zombie-time         | ZOMBIE_TIME         |               | duration for fetching driver locations in m | True     |
+| --service             | SERVICE             | zombie-driver | service name                                | False    |
+| --shutdown-delay      | SHUTDOWN_DELAY      | 5000          | shutdown delay in ms                        | False    |
+| --version             |                     |               | show application version                    | False    |
+
+
 ### Bugs
 Setting logger on nsq producers and consumers.
 The logger used in the project does not implement the required interface to be used in nsq.
 Thus, logs are a bit polluted.
 
-## Architecture
+# Architecture
 I mostly followed the go [conventions](https://golang.org/doc/code.html) and [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
 
 The interfaces are kept small to bigger the abstraction.
@@ -129,6 +164,10 @@ Configuration is injected at start-up.
 Termination signals lead to a graceful shutdown.
 Meaning, all servers and handlers stop accepting new requests, process their current workload and shutdown.
 Though, there is a configurable shutdown timeout, which may prevent this.
+
+### Configuration
+The configuration of the services, e.g. circuit-breaker rules, and backing services (NSQ, redis) is not at all not production ready.
+The current state should be considered as a prototype to solve the coding challenge.
 
 ### Instrumentation
 Only response time metrics and redis method calls are collected as an example of instrumentation.
@@ -170,6 +209,7 @@ Note, that is no circuit-breaker applied in the [gateway HTTP proxy handler](htt
 ### (Zombie) Workflow
 Since I am the only contributer (except for initial commits) and there will be a single PR, I followed a rather "pragmatic" git workflow.
 I implemented features in separate branches in the beginning but stopped to continue this at some point.
+I am aware that this flow is not teamwork compatible.
 
 ## Todo
 * Fix NSQ logging

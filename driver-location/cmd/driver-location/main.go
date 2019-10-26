@@ -18,11 +18,11 @@ var (
 	version = "unkown"
 
 	service     = kingpin.Flag("service", "service name").Envar("SERVICE").Default("driver-location").String()
-	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8081").String()
-	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9103").String()
+	httpAddr    = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Required().String()
+	metricsAddr = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Required().String()
 
 	// Redis
-	redisAddr = kingpin.Flag("redis-addr", "address of Redis instance to connect").Envar("REDIS_ADDR").Default(":6379").String()
+	redisAddr = kingpin.Flag("redis-addr", "address of Redis instance to connect").Envar("REDIS_ADDR").Required().String()
 
 	// NSQ
 	nsqdTCPAddrs        = kingpin.Flag("nsqd-tcp-addrs", "TCP addresses of NSQ deamon").Envar("NSQD_TCP_ADDRS").Required().Strings()
