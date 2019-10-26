@@ -84,7 +84,7 @@ func newHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (http.
 // nsqHandler transforms locations from http requests to nsq messages.
 type nsqHandler struct {
 	topic     string
-	producers map[string]*nsq.Producer
+	producers map[string]*nsq.Producer // safe for concurrent reads
 }
 
 func newNSQHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (*nsqHandler, error) {

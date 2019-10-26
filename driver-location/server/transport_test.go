@@ -111,28 +111,34 @@ func TestServeHTTP(t *testing.T) {
 	defer locationService.Close()
 	locationClient := locationService.Client()
 
-	for id := range locationTests {
-		for minutes := range locationTests[id] {
-			tt := locationTests[id][minutes]
-			t.Run(tt.d, func(t *testing.T) {
-				req, _ := http.NewRequest("GET", locationService.URL+tt.p, nil)
-				req.Close = true
-				req.Header.Set("Connection", "close")
-				res, err := locationClient.Do(req)
-				if err != nil {
-					t.Fatalf("%s: unexpected error %v", tt.d, err)
-				}
-				if w, g := tt.s, res.StatusCode; w != g {
-					t.Errorf("%s: want status code %d got %d", tt.d, w, g)
-				}
-				data, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					t.Fatalf("%s: failed to read response %v", tt.d, err)
-				}
-				if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
-					t.Errorf("%s: want response\n%s\ngot\n%s", tt.d, w, g)
-				}
-			})
+	t.Run("location-handler", func(t *testing.T) {
+		for id := range locationTests {
+			for minutes := range locationTests[id] {
+				tt := locationTests[id][minutes]
+				t.Run(tt.d, func(t *testing.T) {
+					t.Parallel()
+					req, err := http.NewRequest("GET", locationService.URL+tt.p, nil)
+					if err != nil {
+						t.Fatalf("%s: unexpected error %v", tt.d, err)
+					}
+					req.Close = true
+					req.Header.Set("Connection", "close")
+					res, err := locationClient.Do(req)
+					if err != nil {
+						t.Fatalf("%s: unexpected error %v", tt.d, err)
+					}
+					if w, g := tt.s, res.StatusCode; w != g {
+						t.Errorf("%s: want status code %d got %d", tt.d, w, g)
+					}
+					data, err := ioutil.ReadAll(res.Body)
+					if err != nil {
+						t.Fatalf("%s: failed to read response %v", tt.d, err)
+					}
+					if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
+						t.Errorf("%s: want response\n%s\ngot\n%s", tt.d, w, g)
+					}
+				})
+			}
 		}
-	}
+	})
 }

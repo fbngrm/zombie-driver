@@ -142,33 +142,36 @@ func TestProxy(t *testing.T) {
 	defer gatewayService.Close()
 	gatewayClient := gatewayService.Client()
 
-	for id := range gatewayTests {
-		tt := gatewayTests[id]
-		t.Run(tt.d, func(t *testing.T) {
-			req, err := http.NewRequest("GET", gatewayService.URL+tt.p, nil)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			req.Close = true
-			req.Header.Set("Connection", "close")
+	t.Run("zombie-service", func(t *testing.T) {
+		for id := range gatewayTests {
+			tt := gatewayTests[id]
+			t.Run(tt.d, func(t *testing.T) {
+				t.Parallel()
+				req, err := http.NewRequest("GET", gatewayService.URL+tt.p, nil)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				req.Close = true
+				req.Header.Set("Connection", "close")
 
-			res, err := gatewayClient.Do(req)
-			if err != nil {
-				t.Fatalf("unexpected error %v", err)
-			}
+				res, err := gatewayClient.Do(req)
+				if err != nil {
+					t.Fatalf("unexpected error %v", err)
+				}
 
-			if w, g := tt.s, res.StatusCode; w != g {
-				t.Errorf("want status code %d got %d", w, g)
-			}
-			data, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				t.Fatalf("failed to read response %v", err)
-			}
-			if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
-				t.Errorf("want response %s got %s", w, g)
-			}
-		})
-	}
+				if w, g := tt.s, res.StatusCode; w != g {
+					t.Errorf("want status code %d got %d", w, g)
+				}
+				data, err := ioutil.ReadAll(res.Body)
+				if err != nil {
+					t.Fatalf("failed to read response %v", err)
+				}
+				if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
+					t.Errorf("want response %s got %s", w, g)
+				}
+			})
+		}
+	})
 }
 
 var nsqTests = []struct {
@@ -254,30 +257,32 @@ func TestNSQ(t *testing.T) {
 	want := make([]string, 0) // expected messages
 
 	// send requests to publish nsq messages
-	for id := range nsqTests {
-		tt := nsqTests[id]
-		t.Run(tt.d, func(t *testing.T) {
-			req, err := http.NewRequest("PATCH", gatewayService.URL+tt.p, nil)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-			req.Close = true
-			req.Header.Set("Connection", "close")
-			req.Body = ioutil.NopCloser(strings.NewReader(tt.b))
-			res, err := gatewayClient.Do(req)
-			if err != nil {
-				t.Fatalf("unexpected error %v", err)
-			}
-			if w, g := tt.s, res.StatusCode; w != g {
-				t.Errorf("want status code %d got %d", w, g)
-			}
-			// increase counter only if NSQ message has been sent successfully
-			if res.StatusCode == http.StatusOK {
-				want = append(want, tt.b)
-				count++
-			}
-		})
-	}
+	t.Run("nsq-server", func(t *testing.T) {
+		for id := range nsqTests {
+			tt := nsqTests[id]
+			t.Run(tt.d, func(t *testing.T) {
+				req, err := http.NewRequest("PATCH", gatewayService.URL+tt.p, nil)
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				req.Close = true
+				req.Header.Set("Connection", "close")
+				req.Body = ioutil.NopCloser(strings.NewReader(tt.b))
+				res, err := gatewayClient.Do(req)
+				if err != nil {
+					t.Fatalf("unexpected error %v", err)
+				}
+				if w, g := tt.s, res.StatusCode; w != g {
+					t.Errorf("want status code %d got %d", w, g)
+				}
+				// increase counter only if NSQ message has been sent successfully
+				if res.StatusCode == http.StatusOK {
+					want = append(want, tt.b)
+					count++
+				}
+			})
+		}
+	})
 
 	// no messages sent
 	if count < 1 {

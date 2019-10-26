@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 rm -f *.dat
 NSQD_LOGFILE=$(mktemp -t nsqlookupd.XXXXXXX)

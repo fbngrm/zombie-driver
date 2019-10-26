@@ -103,7 +103,7 @@ var zombieTests = map[string]map[int]struct {
 	},
 }
 
-func TestProxy(t *testing.T) {
+func TestServeHTTP(t *testing.T) {
 	// mute logger in tests
 	logger := zerolog.New(ioutil.Discard)
 	log.SetFlags(0)
@@ -150,45 +150,48 @@ func TestProxy(t *testing.T) {
 	}))
 	defer driverLocationSrvc.Close()
 
-	for id := range zombieTests {
-		for minutes := range zombieTests[id] {
-			tt := zombieTests[id][minutes]
+	t.Run("location-service", func(t *testing.T) {
+		for id := range zombieTests {
+			for minutes := range zombieTests[id] {
+				tt := zombieTests[id][minutes]
 
-			// proxy handler to test
-			driverLocationURL := driverLocationSrvc.URL + "/drivers/%s/locations?minutes=%d"
-			// we use the zombie radius and the minutes of the test data to configure the handler
-			h, err := newZombieHandler(driverLocationURL, tt.zr, minutes, logger)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			zombieService := httptest.NewServer(h)
-			defer zombieService.Close()
-			zombieClient := zombieService.Client()
-
-			t.Run(tt.d, func(t *testing.T) {
-				req, err := http.NewRequest("GET", zombieService.URL+tt.p, nil)
+				// proxy handler to test
+				driverLocationURL := driverLocationSrvc.URL + "/drivers/%s/locations?minutes=%d"
+				// we use the zombie radius and the minutes of the test data to configure the handler
+				h, err := newZombieHandler(driverLocationURL, tt.zr, minutes, logger)
 				if err != nil {
 					t.Fatalf("unexpected error: %v", err)
 				}
-				req.Close = true
-				req.Header.Set("Connection", "close")
-				res, err := zombieClient.Do(req)
-				if err != nil {
-					t.Fatalf("unexpected error %v", err)
-				}
 
-				if w, g := tt.s, res.StatusCode; w != g {
-					t.Errorf("want status code %d got %d", w, g)
-				}
-				data, err := ioutil.ReadAll(res.Body)
-				if err != nil {
-					t.Fatalf("failed to read response %v", err)
-				}
-				if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
-					t.Errorf("want response %s got %s", w, g)
-				}
-			})
+				t.Run(tt.d, func(t *testing.T) {
+					t.Parallel()
+					zombieService := httptest.NewServer(h)
+					defer zombieService.Close()
+					zombieClient := zombieService.Client()
+
+					req, err := http.NewRequest("GET", zombieService.URL+tt.p, nil)
+					if err != nil {
+						t.Fatalf("unexpected error: %v", err)
+					}
+					req.Close = true
+					req.Header.Set("Connection", "close")
+					res, err := zombieClient.Do(req)
+					if err != nil {
+						t.Fatalf("unexpected error %v", err)
+					}
+
+					if w, g := tt.s, res.StatusCode; w != g {
+						t.Errorf("want status code %d got %d", w, g)
+					}
+					data, err := ioutil.ReadAll(res.Body)
+					if err != nil {
+						t.Fatalf("failed to read response %v", err)
+					}
+					if w, g := tt.r, strings.TrimSpace(string(data)); w != g {
+						t.Errorf("want response %s got %s", w, g)
+					}
+				})
+			}
 		}
-	}
+	})
 }

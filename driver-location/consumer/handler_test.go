@@ -11,7 +11,7 @@ import (
 // matches dates in RFC339 format
 const rfc3339 = `^([\d]+)-(0[1-9]|1[012])-(0[1-9]|[12][\d]|3[01])[Tt]([01][\d]|2[0-3]):([0-5][\d]):([0-5][\d]|60)(\.[\d]+)?(([Zz])|([\+|\-]([01][\d]|2[0-3]):[0-5][\d]))$`
 
-var tests = map[string]struct {
+var nsqHandlerTests = map[string]struct {
 	d string               // test case description
 	m *nsq.Message         // input
 	l types.LocationUpdate // expected output
@@ -45,16 +45,16 @@ type testPublisher struct {
 }
 
 func (t *testPublisher) Publish(timestamp int64, key string, l types.LocationUpdate) error {
-	w, g := tests[key].l, l
+	w, g := nsqHandlerTests[key].l, l
 	if !(w.Lat == g.Lat && w.Long == w.Long) {
-		t.t.Errorf("%s: want %v got %v", tests[key].d, w, g)
+		t.t.Errorf("%s: want %v got %v", nsqHandlerTests[key].d, w, g)
 	}
 	r, err := regexp.Compile(rfc3339)
 	if err != nil {
 		t.t.Fatalf("unexpected error: %v", err)
 	}
 	if w, g := 1, len(r.FindAllString(l.UpdatedAt, -1)); w != g {
-		t.t.Errorf("%s: want %d match got %d", tests[key].d, w, g)
+		t.t.Errorf("%s: want %d match got %d", nsqHandlerTests[key].d, w, g)
 	}
 	return nil
 }
@@ -66,8 +66,8 @@ func TestLocationUpdater(t *testing.T) {
 	lu := LocationUpdater{
 		&p,
 	}
-	for key := range tests {
-		tt := tests[key]
+	for key := range nsqHandlerTests {
+		tt := nsqHandlerTests[key]
 		lu.HandleMessage(tt.m)
 	}
 }
