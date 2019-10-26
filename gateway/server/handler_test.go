@@ -111,7 +111,11 @@ func TestProxy(t *testing.T) {
 		// send mock data
 		if p, ok := gatewayTests[id]; ok {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(p.z))
+			_, err := w.Write([]byte(p.z))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+				return
+			}
 			return
 		}
 		// driver ID unknown
@@ -292,7 +296,7 @@ func TestNSQ(t *testing.T) {
 	// need to set test timeout; potentially blocks forever if not
 	// all messages are delivered
 	c := newConsumerHandler(t, gatewayConf.URLs[0].NSQ.Topic, count)
-	c.read(gatewayConf.URLs[0].NSQ.TCPAddrs[0])
+	err = c.read(gatewayConf.URLs[0].NSQ.TCPAddrs[0])
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

@@ -143,7 +143,11 @@ func TestServeHTTP(t *testing.T) {
 		if tt, ok := zombieTests[id][m]; ok {
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(tt.l))
+			_, err := w.Write([]byte(tt.l))
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+				return
+			}
 			return
 		}
 		w.WriteHeader(http.StatusNotFound)

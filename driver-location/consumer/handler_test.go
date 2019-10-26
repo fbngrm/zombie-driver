@@ -68,6 +68,9 @@ func TestLocationUpdater(t *testing.T) {
 	}
 	for key := range nsqHandlerTests {
 		tt := nsqHandlerTests[key]
-		lu.HandleMessage(tt.m)
+		err := lu.HandleMessage(tt.m)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 	}
 }

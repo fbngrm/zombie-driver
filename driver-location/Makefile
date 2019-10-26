@@ -23,4 +23,5 @@ test-cover:
 lint:
 	docker pull golangci/golangci-lint:latest
 	docker run -v`pwd`:/workspace -w /workspace \
+		-e GO111MODULE=on \
         golangci/golangci-lint:latest golangci-lint run ./...

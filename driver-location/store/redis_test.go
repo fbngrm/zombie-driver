@@ -117,6 +117,9 @@ func TestFetchRange(t *testing.T) {
 		&testRedis{t: t},
 	}
 	for k, tt := range rangeTests {
-		r.FetchRange(k, tt.min, tt.max) // we don't test any errors
+		_, err := r.FetchRange(k, tt.min, tt.max)
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
 	}
 }

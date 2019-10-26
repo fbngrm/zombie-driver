@@ -85,15 +85,13 @@ func TestNSQ(t *testing.T) {
 	// equals. we need to set a test deadline hence this possibly blocks forever
 	// in case of failed transmission. we check count every 100ms.
 	msgCount := len(consumerTests)
-	tick := time.Tick(100 * time.Millisecond)
+	ticker := time.NewTicker(100 * time.Millisecond)
 	go func() {
-		for {
-			select {
-			case <-tick:
-				if int(atomic.LoadUint32(&h.received)) == msgCount {
-					consumer.Shutdown()
-					return
-				}
+		for range ticker.C {
+			if int(atomic.LoadUint32(&h.received)) == msgCount {
+				consumer.Shutdown()
+				ticker.Stop()
+				return
 			}
 		}
 	}()
@@ -112,6 +110,9 @@ func sendMessage(topic string, body []byte) error {
 	httpclient := &http.Client{}
 	endpoint := fmt.Sprintf("http://127.0.0.1:4151/pub?topic=%s", topic)
 	req, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
 	resp, err := httpclient.Do(req)
 	if err != nil {
 		return err

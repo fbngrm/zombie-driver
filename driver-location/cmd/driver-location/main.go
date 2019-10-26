@@ -74,7 +74,7 @@ func main() {
 		Cfg:              cfg,
 	}
 	handler := &consumer.LocationUpdater{
-		redisStore,
+		Publisher: redisStore,
 	}
 	nsqConsumer, err := consumer.NewNSQ(ncfg, handler, logger)
 	if err != nil {
