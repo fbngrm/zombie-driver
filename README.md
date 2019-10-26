@@ -151,6 +151,7 @@ Thus, logs are a bit polluted.
 ### Example
 Run a basic example from the project root:
 
+```bash
     # start all services in a docker container
     make up
 
@@ -193,7 +194,7 @@ Run a basic example from the project root:
     Request-Id: bmq2ij790i5ub07vlkk0
 
     {"id":1,"zombie":false}
-
+```
 
 # Architecture
 I mostly followed the go [conventions](https://golang.org/doc/code.html) and [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
