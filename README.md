@@ -159,8 +159,9 @@ make up
 # publish a location via the gateway service
 curl --request PATCH -d '{"latitude": 48.864193,"longitude": 20.350498}' 'http://127.0.0.1:8080/drivers/1/locations'
 
-# check success via the internal driver-location service directly; response data may differ
+# check locations via the `internal` driver-location service directly; response data may differ
 curl --request GET -i 'http://127.0.0.1:8081/drivers/1/locations?minutes=5'
+curl: (7) Failed to connect to 127.0.0.1 port 8081: Connection refused # not reachable from host
 
 HTTP/1.1 200 OK
 Content-Type: application/json
@@ -170,7 +171,7 @@ Content-Length: 83
 
 [{"updated_at":"2019-10-26T10:57:38Z","latitude":48.864193,"longitude":20.350498}]
 
-# zombie check via the gateway service; reponse data may differ
+# zombie check via the `public facing` gateway service; reponse data may differ
 curl --request GET -i 'http://127.0.0.1:8080/drivers/1'
 
 HTTP/1.1 200 OK
@@ -218,7 +219,7 @@ Meaning, all servers and handlers stop accepting new requests, process their cur
 Though, there is a configurable shutdown timeout, which may prevent this.
 
 ### Configuration
-The configuration of the services, e.g. circuit-breaker rules, and backing services (NSQ, redis) is not at all not production ready.
+The configuration of the services, e.g. circuit-breaker rules, and backing services (NSQ, redis) is not at all production ready.
 The current state should be considered as a prototype to solve the coding challenge.
 
 ### Instrumentation
