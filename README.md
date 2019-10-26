@@ -4,12 +4,14 @@
 This branch implements the requirements defined in the [task](https://github.com/heetch/FabianG-technical-test/blob/development/REQUIREMENTS.md) description.
 Additional functionality is:
 
-* Configuration via ENV variables or command-line args
+* Configuration via environment variables or command-line args
 * Instrumentation
 * Circuit-breaker
 * Docker containers
 * Structured logging
 * Configurable zombie-driver identification `Predicate/business rules`
+
+# Overview
 
 This document is organized in two sections:
 
@@ -21,7 +23,7 @@ This document is organized in two sections:
 ### Setup
 This section assumes there is a go, docker, make and git installation available on the system.
 
-To check your installation, run: 
+To check your installation, run:
 
     go version
     docker version
@@ -52,11 +54,8 @@ The configuration resides in the [docker-compose](https://github.com/heetch/Fabi
 The Dockerfiles used to build images are located in the project root.
 
 
-##### Using make
-The services and backing services are started in a docker container.
-
 ###### Build
-Builds will be located in the `/bin` sub-directory of each service. Binaries will use the latest git commit or tag as a version.
+Builds will are located in the `/bin` sub-directory of each service. Binaries use the latest git commit hash or tag as a version.
 
 
     make all # builds all services
@@ -79,7 +78,7 @@ There are several targets available to run tests.
 
 
 ###### Lint
-There is a lint target which runs golangci-lint in a docker container.
+There is a lint target which runs [golangci-lint](https://github.com/golangci/golangci-lint) in a docker container.
 
 
     make lint
@@ -95,7 +94,7 @@ Run the make command from the respective service directory or use the `-C` argum
 
 ### Configuration
 Services can be configured by parameters or environment variables.
-For configuring the services via env variables use the docker-compose file.
+For configuring the services via environment variables use the docker-compose file.
 Alternatively, provide arguments to the command directly.
 
 
@@ -141,12 +140,12 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay      | SHUTDOWN_DELAY      | 5000          | shutdown delay in ms                        | False    |
 | --version             |                     |               | show application version                    | False    |
 
-##### Logging
-The current setup uses a human friendly logging format. Service loggers attach the service name and version ID to the log output.
+#### Logging
+The current setup uses a human friendly logging format. Service loggers attach the service name and build version to the log output.
 
-### Bugs
-Setting logger on nsq producers and consumers.
-The logger used in the project does not implement the required interface to be used in nsq.
+#### Bugs
+Setting logger on NSQ producers and consumers.
+The logger used in the project does not implement the required interface to be used in NSQ.
 Thus, logs are a bit polluted.
 
 # Architecture
@@ -160,7 +159,7 @@ Errors are used as values.
 Furthermore, I followed the dependency injection and fail early approach, with very few exceptions.
 Components are provided all dependencies they need during instantiation.
 The result is either a functioning instance or an error.
-On application start-up and error results in termination.
+On application start-up,  an error results in termination.
 Runtime errors do not lead to a crash or panic.
 
 Configuration is injected at start-up.
@@ -176,19 +175,19 @@ The current state should be considered as a prototype to solve the coding challe
 ### Instrumentation
 Only response time metrics and redis method calls are collected as an example of instrumentation.
 In a real world application the runtime behavior would be monitored in a more detailed way.
-Prometheus is used for aggregating the metrics, which are provided by an http handler to be scraped by an prometheus collector.
+Prometheus is used for aggregating the metrics, which are provided by an HTTP handler to be scraped by an prometheus collector.
 A graceful shutdown of the server ensures that the metrics will be scraped eventually by checking against an access counter.
-Though, the shutdown timeout which prevents this from being guaranteed.
+Though, the shutdown timeout prevents this from being guaranteed.
 
 ### Tests
-I wrote unit tests for core functionality, things expected to break and for edge/error cases.
+There are unit tests for core functionality, things expected to break and for edge/error cases.
 In general I think testing on package boundaries as well as core functionality internally is a better approach than just aiming for a certain percentage of coverage.
 Regarding a few error cases, test coverage should be increased though.
 
-Tests that require and nsq server use a helper script to start and shutdown a docker instance in the background but stream logs to a file to not obfuscate test log.
+Tests that require and NSQ server use a helper script to start and shutdown a docker instance in the background but stream logs to a file to not obfuscate test log.
 
 ##### Testdata
-There is a testdata directory which provides slightly realistic sample data used in most tests.
+There is a testdata directory which provides simple real world sample data used in most tests.
 
 ##### Redis
 Since there are two redis commands used only, I implemented an interface to provide a simple mock in tests.
@@ -198,12 +197,12 @@ If there will be more commands used, I would prefer to add a dependency and remo
 ### Dependencies
 In general, the code is written in a way to use as few dependencies as possible and make use of the standard library whenever possible.
 This applies also for tests, where no external libraries are used since they mostly do not provide significant advantages but may obfuscate clear readability.
-This especially applies to BDD (Behavioral Driven Design/Development) test libraries, which often introduce test-induced design damage by needless indirection and conceptual overhead.
+This especially applies to BDD (Behavioral Driven Design/Development) test libraries, which often introduce needless indirection and conceptual overhead.
 
 ##### Shared libraries
 There are a few shared libraries at the project root which are used in all three services.
 I would tend to move each service to an own repo and copy over the library code along.
-Although, using go modules with versioning, providing the ability to update incrementally, makes it easier to handle shared libraries.
+Although, using go modules with visioning, providing the ability to update incrementally, makes it easier to handle shared libraries now.
 
 ### Circuit-breaker
 The circuit-breaker should additionally be implemented as middleware for HTTP handlers.
@@ -211,13 +210,13 @@ This requires a refactoring of the middleware which is out-of-scope during this 
 Note, that is no circuit-breaker applied in the [gateway HTTP proxy handler](https://github.com/heetch/FabianG-technical-test/blob/development/gateway/server/handler.go#L68-L78).
 
 ### (Zombie) Workflow
-Since I am the only contributer (except for initial commits) and there will be a single PR, I followed a rather "pragmatic" git workflow.
+Since I am the only contributor (except for initial commits) and there will be a single PR, I followed a rather "pragmatic" git workflow.
 I implemented features in separate branches in the beginning but stopped to continue this at some point.
-I am aware that this flow is not teamwork compatible.
+I am aware that this flow is not ideal for teamwork.
 
 ### Todo
 * Fix NSQ logging
-* Fix driver-location URL in zombie-driver config (no format string)
+* Fix driver-location URL in zombie-driver config (avoid format string)
 * Prometheus scraper + dashboard
 * HTTPS (gateway, NSQ)
 * Authentication/sessions
