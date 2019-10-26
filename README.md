@@ -116,7 +116,7 @@ Alternatively, provide arguments to the command directly.
 | --http-addr              | HTTP_ADDR              |                 | address of HTTP server         | True     |
 | --metrics-addr           | METRICS_ADDR           |                 | address of metrics server      | True     |
 | --redis-addr             | REDIS_ADDR             |                 | address of metrics server      | True     |
-| --nsqd-tcp-addrs           | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
+| --nsqd-tcp-addrs         | NSQD_TCP_ADDRS         |                 | TCP addresses of NSQ deamon    | True     |
 | --nsqd-lookupd-http-addr | NSQ_LOOKUPD_HTTP_ADDRS |                 | HTTP addresses for NSQD lookup | True     |
 | --nsqd-topic             | NSQ_TOPIC              |                 | NSQ topic                      | True     |
 | --nsqd-chan              | NSQ_CHAN               |                 | NSQ channel                    | True     |
