@@ -15,8 +15,8 @@ var (
 	version = "unkown"
 
 	service           = kingpin.Flag("service", "service name").Envar("SERVICE").Default("zombie-driver").String()
-	httpAddr          = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Default(":8082").String()
-	metricsAddr       = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Default(":9104").String()
+	httpAddr          = kingpin.Flag("http-addr", "address of HTTP server").Envar("HTTP_ADDR").Required().String()
+	metricsAddr       = kingpin.Flag("metrics-addr", "address of metrics server").Envar("METRICS_ADDR").Required().String()
 	driverLocationURL = kingpin.Flag("driver-location-url", "address of driver-location service").Envar("DRIVER_LOCATION_URL").Required().String()
 	zombieRadius      = kingpin.Flag("zombie-radius", "radius a zombie can move").Envar("ZOMBIE_RADIUS").Required().Float()
 	zombieTime        = kingpin.Flag("zombie-time", "duration for fetching driver locations in minutes").Envar("ZOMBIE_TIME").Required().Int()
