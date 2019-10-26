@@ -3,8 +3,8 @@ version: '3'
 services:
   redis:
     image: redis:4.0.9-alpine
-    ports:
-      - "6379:6379"
+    expose:
+      - "6379"
 
   nsqlookupd:
     image: nsqio/nsq:v0.3.8
@@ -38,9 +38,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dl
-    ports:
-      - "8081:8081"
-      - "9103:9103"
+    expose:
+      - "8081"
+      - "9103"
     depends_on:
       - nsqlookupd
       - nsqd
@@ -63,9 +63,9 @@ services:
       DRIVER_LOCATION_URL: "http://driver-location:8081/drivers/%s/locations?minutes=%d" # todo: don't use format string
       ZOMBIE_RADIUS: 500
       ZOMBIE_TIME: 5
-    ports:
-      - "8082:8082"
-      - "9104:9104"
+    expose:
+      - "8082"
+      - "9104"
     command: /bin/zombie-driver
 
   gateway:
@@ -77,5 +77,6 @@ services:
       - driver-location
     ports:
       - "8080:8080"
-      - "9102:9102"
+    expose:
+      - "9102"
     command: /bin/gateway --cfg-file=/config/config.yaml
