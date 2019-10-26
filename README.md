@@ -1,8 +1,7 @@
 ![zombie](zombie-150.png)
 
 # Implementation
-This branch implements the requirements defined in the [task](https://github.com/heetch/FabianG-technical-test/blob/development/REQUIREMENTS.md) description.
-Additional functionality is:
+This branch implements the requirements defined in the [task](https://github.com/heetch/FabianG-technical-test/blob/development/REQUIREMENTS.md) description and additional functionality:
 
 * Configuration via environment variables or command-line args
 * Instrumentation
@@ -36,8 +35,6 @@ Fetch the repo from GitHub:
 
 ```bash
 git clone git@github.com:heetch/FabianG-technical-test.git
-cd FabianG-technical-test
-go get
 ```
 
 ##### Dependency management
@@ -47,6 +44,12 @@ If the go version is >= 1.13, modules are enabled by default.
 There might be steps required to access private repositories.
 If you have problems setting up or building the project which are related to modules, please consider reading up the [documentation](https://github.com/golang/go/wiki/Modules).
 If this does not solve the issue please open an issue here.
+
+
+```bash
+cd FabianG-technical-test
+go get
+```
 
 ### Usage
 Makefiles are provided which should be used to test, build and run the services separately or all at once.
@@ -91,6 +94,13 @@ Run the make command from the respective service directory or use the `-C` argum
 
 ```bash
 make -C <service_name> all # builds <service_name>
+```
+
+##### Code changes
+After making changes to the code, you need to rebuild the image(s):
+
+```bash
+docker-compose build --no-cache <service_name>
 ```
 
 ### Configuration
@@ -171,7 +181,6 @@ Content-Length: 23
 Content-Type: application/json
 Date: Sat, 26 Oct 2019 11:06:56 GMT
 Request-Id: bmq2hk790i5q0u9t1pog
-Request-Id: bmq2hk790i5ub07vlkjg
 
 {"id":1,"zombie":true}
 
@@ -184,7 +193,6 @@ HTTP/1.1 200 OK
 Content-Length: 24
 Content-Type: application/json
 Date: Sat, 26 Oct 2019 11:09:00 GMT
-Request-Id: bmq2ij790i5q0u9t1ppg
 Request-Id: bmq2ij790i5ub07vlkk0
 
 {"id":1,"zombie":false}
