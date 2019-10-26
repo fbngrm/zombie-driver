@@ -15,6 +15,7 @@ type Publisher interface {
 }
 
 // LocationUpdater is a nsq handler.
+// https://github.com/nsqio/go-nsq/blob/master/consumer.go#L20-L38
 type LocationUpdater struct {
 	Publisher
 }
