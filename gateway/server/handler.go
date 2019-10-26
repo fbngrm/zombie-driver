@@ -145,6 +145,7 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// publish synchronously
+	// todo, requeue in case failure
 	if err := hystrix.Do("publish_nsq", func() error { // circuit-breaker
 		for _, producer := range n.producers {
 			if err := producer.Publish(n.topic, b); err != nil {
