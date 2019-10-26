@@ -26,18 +26,18 @@ This section assumes there is a go, docker, make and git installation available 
 To check your installation, run:
 
 ```bash
-    go version
-    docker version
-    make --version
-    git version
+go version
+docker version
+make --version
+git version
 ```
 
 Fetch the repo from GitHub:
 
 ```bash
-    git clone git@github.com:heetch/FabianG-technical-test.git
-    cd FabianG-technical-test
-    go get
+git clone git@github.com:heetch/FabianG-technical-test.git
+cd FabianG-technical-test
+go get
 ```
 
 ##### Dependency management
@@ -59,30 +59,30 @@ The Dockerfiles used to build images are located in the project root.
 Builds will are located in the `/bin` sub-directory of each service. Binaries use the latest git commit hash or tag as a version.
 
 ```bash
-    make all # builds all services
+make all # builds all services
 ```
 
 ###### Run
 Services are intended to be ran in a docker container.
 
 ```bash
-    make up # builds docker containers and runs all services and backing services
+make up # builds docker containers and runs all services and backing services
 ```
 
 ###### Tests
 There are several targets available to run tests.
 
 ```bash
-    make test # runs tests for all services
-    make test-cover # creates coverage profiles for all services
-    make test-race # tests services for race conditions
+make test # runs tests for all services
+make test-cover # creates coverage profiles for all services
+make test-race # tests services for race conditions
 ```
 
 ###### Lint
 There is a lint target which runs [golangci-lint](https://github.com/golangci/golangci-lint) in a docker container.
 
 ```bash
-    make lint
+make lint
 ```
 
 ###### Service level
@@ -90,7 +90,7 @@ Except for `up`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
 ```bash
-    make -C <service_name> all # builds <service_name>
+make -C <service_name> all # builds <service_name>
 ```
 
 ### Configuration
