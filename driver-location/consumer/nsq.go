@@ -62,15 +62,13 @@ func (n *NSQ) Shutdown() {
 	for _, addr := range n.cfg.NsqdTCPAddrs {
 		err := n.c.DisconnectFromNSQD(addr)
 		if err != nil {
-			l := n.logger.With().Err(err).Logger()
-			l.Error().Msgf("disconnecting from NSQD: %s", addr)
+			n.logger.Error().Err(err).Msgf("disconnecting from NSQD: %s", addr)
 		}
 	}
 	for _, addr := range n.cfg.LookupdHTTPAddrs {
 		err := n.c.DisconnectFromNSQLookupd(addr)
 		if err != nil {
-			l := n.logger.With().Err(err).Logger()
-			l.Error().Msgf("disconnecting from NSQLookupd: %s", addr)
+			n.logger.Error().Err(err).Msgf("disconnecting from NSQLookupd: %s", addr)
 		}
 	}
 	n.logger.Info().Msg("stopping nsq consumer topic")
