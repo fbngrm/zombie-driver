@@ -34,7 +34,10 @@ git version
 Fetch the repo from GitHub:
 
 ```bash
+cd $GOPATH/src/github.com/heetch
 git clone git@github.com:heetch/FabianG-technical-test.git
+cd FabianG-technical-test
+git checkout development
 ```
 
 ##### Dependency management
@@ -44,13 +47,6 @@ If the go version is >= 1.13, modules are enabled by default.
 There might be steps required to access private repositories.
 If you have problems setting up or building the project which are related to modules, please consider reading up the [documentation](https://github.com/golang/go/wiki/Modules).
 If this does not solve the issue please open an issue here.
-
-
-```bash
-cd FabianG-technical-test
-git checkout development
-go get
-```
 
 ### Usage
 Makefiles are provided which should be used to test, build and run the services separately or all at once.
