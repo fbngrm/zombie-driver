@@ -48,6 +48,7 @@ If this does not solve the issue please open an issue here.
 
 ```bash
 cd FabianG-technical-test
+git checkout development
 go get
 ```
 
