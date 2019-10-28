@@ -86,7 +86,7 @@ make lint
 ```
 
 ###### Service level
-Except for `up`, all targets are available on a service level.
+Except for `up` annnd `lint`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
 ```bash

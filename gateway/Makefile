@@ -1,4 +1,4 @@
-.PHONY: all build test test-race test-cover lint
+.PHONY: all build test test-race test-cover
 
 all: build
 
@@ -19,8 +19,3 @@ test-cover:
 	../test.sh -race -timeout=2m \
 		-coverprofile=all.coverage.out \
 		-coverpkg=./... $$(go list ./...|grep -v cmd)
-
-lint:
-	docker pull golangci/golangci-lint:latest
-	docker run -v`pwd`:/workspace -w /workspace \
-        golangci/golangci-lint:latest golangci-lint run ./...
