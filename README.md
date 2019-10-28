@@ -86,7 +86,7 @@ make lint
 ```
 
 ###### Service level
-Except for `up` annnd `lint`, all targets are available on a service level.
+Except for `up` and `lint`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
 ```bash
@@ -249,7 +249,7 @@ This especially applies to BDD (Behavioral Driven Design/Development) test libra
 ##### Shared libraries
 There are a few shared libraries at the project root which are used in all three services.
 I would tend to move each service to an own repo and copy over the library code along.
-Although, using go modules with visioning, providing the ability to update incrementally, makes it easier to handle shared libraries now.
+Although, using go modules with versioning, providing the ability to update incrementally, makes it easier to handle shared libraries now.
 
 ### Circuit-breaker
 The circuit-breaker should additionally be implemented as middleware for HTTP handlers.
