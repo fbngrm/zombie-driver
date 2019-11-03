@@ -42,7 +42,7 @@ func newZombieHandler(driverLocationURL string, zombieRadius float64, zombieTime
 	lh := &zombieHandler{
 		client:       &http.Client{},
 		url:          driverLocationURL,
-		zombieRadius: zombieRadius,
+		zombieRadius: zombieRadius / 1000.0, // m to km
 		zombieTime:   zombieTime,
 	}
 
@@ -118,7 +118,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	zombie := types.ZombieDriver{
 		ID:     driverId,
-		Zombie: dist < (z.zombieRadius / 1000.0), // m to km
+		Zombie: dist < z.zombieRadius,
 	}
 	handler.EncodeJSON(w, r, zombie, http.StatusOK)
 }
