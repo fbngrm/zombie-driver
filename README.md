@@ -66,7 +66,7 @@ make all # builds all services
 Services are intended to be ran in a docker container.
 
 ```bash
-make up # builds docker containers and runs all services and backing services
+make up # builds docker images and runs all services and backing services in a container.
 ```
 
 ###### Tests
@@ -212,7 +212,7 @@ Runtime errors do not lead to a crash or panic.
 Configuration is injected at start-up.
 
 Termination signals lead to a graceful shutdown.
-Meaning, all servers and handlers stop accepting new requests, process their current workload and shutdown.
+Meaning, all servers and handlers stop accepting new requests, process their current workload and shut down.
 Though, there is a configurable shutdown timeout, which may prevent this.
 
 ### Configuration
@@ -231,10 +231,12 @@ There are unit tests for core functionality, things expected to break and for ed
 In general I think testing on package boundaries as well as core functionality internally is a better approach than just aiming for a certain percentage of coverage.
 Regarding a few error cases, test coverage should be increased though.
 
-Tests that require and NSQ server use a helper script to start and shutdown a docker instance in the background but stream logs to a file to not obfuscate test log.
+#### Integration tests
+Tests that require a NSQ server use a helper script to start and shutdown a docker instance in the background but stream logs to a file to not obfuscate test logs.
+The log file is located in the `/tmp` directory.
 
 ##### Testdata
-There is a testdata directory which provides simple real world sample data used in most tests.
+There is a testdata directory which provides simple real world data used in most tests.
 
 ##### Redis
 Since there are two redis commands used only, I implemented an interface to provide a simple mock in tests.
@@ -254,9 +256,9 @@ Although, using go modules with versioning, providing the ability to update incr
 ### Circuit-breaker
 The circuit-breaker should additionally be implemented as middleware for HTTP handlers.
 This requires a refactoring of the middleware which is out-of-scope during this test.
-Note, that is no circuit-breaker applied in the [gateway HTTP proxy handler](https://github.com/heetch/FabianG-technical-test/blob/development/gateway/server/handler.go#L68-L78).
+Note, that no circuit-breaker is applied in the [gateway HTTP proxy handler](https://github.com/heetch/FabianG-technical-test/blob/development/gateway/server/handler.go#L68-L78).
 
-### (Zombie) Workflow
+### Workflow
 Since I am the only contributor (except for initial commits) and there will be a single PR, I followed a rather "pragmatic" git workflow.
 I implemented features in separate branches in the beginning but stopped to continue this at some point.
 I am aware that this flow is not ideal for teamwork.

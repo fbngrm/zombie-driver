@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var inputs = []string{
+var testURLs = []string{
 	`urls:
   -
     path: "/drivers/{id:[0-9]+}/locations"
@@ -41,7 +41,7 @@ var cfgtests = []struct {
 }{
 	{
 		d:  "expect config to contain 2 URLs",
-		in: inputs[0],
+		in: testURLs[0],
 		want: []res{
 			res{
 				u: URL{
@@ -70,7 +70,7 @@ var cfgtests = []struct {
 	},
 	{
 		d:  "expect missing protocol error",
-		in: inputs[1],
+		in: testURLs[1],
 		want: []res{
 			res{
 				u: URL{
@@ -85,7 +85,7 @@ var cfgtests = []struct {
 
 func TestLoad(t *testing.T) {
 	for i, tt := range cfgtests {
-		r := strings.NewReader(inputs[i])
+		r := strings.NewReader(testURLs[i])
 		cfg, err := load(r)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)

@@ -8,7 +8,7 @@ import (
 	"github.com/heetch/FabianG-technical-test/types"
 )
 
-// publish tests by key
+// publish tests by driver-ID
 var publishTests = map[string]struct {
 	d string               // test case description
 	t int64                // input timestamp
@@ -46,7 +46,7 @@ var publishTests = map[string]struct {
 	},
 }
 
-// range tests by key
+// range tests by driver-ID
 var rangeTests = map[string]struct {
 	d   string         // test case description
 	min int64          // input min score

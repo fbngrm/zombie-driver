@@ -25,7 +25,7 @@ func TestHaversine(t *testing.T) {
 	}
 }
 
-// testdata by driver ID and minutes
+// testdata by driver-ID and minutes
 var zombieTests = map[string]map[int]struct {
 	d  string  // description of test case
 	l  string  // mock response of driver-location

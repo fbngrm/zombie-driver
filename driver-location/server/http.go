@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// HTTPServer represents an http server.
+// HTTPServer represents an http-server.
 type HTTPServer struct {
 	server *http.Server
 	logger zerolog.Logger

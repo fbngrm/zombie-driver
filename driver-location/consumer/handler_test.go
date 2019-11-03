@@ -11,9 +11,10 @@ import (
 // matches dates in RFC339 format
 const rfc3339 = `^([\d]+)-(0[1-9]|1[012])-(0[1-9]|[12][\d]|3[01])[Tt]([01][\d]|2[0-3]):([0-5][\d]):([0-5][\d]|60)(\.[\d]+)?(([Zz])|([\+|\-]([01][\d]|2[0-3]):[0-5][\d]))$`
 
+// nsq tests by driver-ID
 var nsqHandlerTests = map[string]struct {
 	d string               // test case description
-	m *nsq.Message         // input
+	m *nsq.Message         // input message
 	l types.LocationUpdate // expected output
 }{
 	"1": {
@@ -38,8 +39,7 @@ var nsqHandlerTests = map[string]struct {
 	},
 }
 
-// testPublisher mocks a Publisher. It checks for message equality
-// and timestamp format.
+// testPublisher mocks a Publisher. It checks for message equality and timestamp format.
 type testPublisher struct {
 	t *testing.T
 }

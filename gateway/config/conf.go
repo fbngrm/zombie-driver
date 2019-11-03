@@ -9,6 +9,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+// protocol is used to determine the http-handler to be used for an url.
 type protocol int
 
 const (
@@ -48,7 +49,6 @@ func (u URL) Protocol() (protocol, error) {
 }
 
 // config represents a server configuration read from a YAML file.
-// Note, the configuration does not get validated or sanitized.
 type Config struct {
 	URLs []URL `yaml:"urls"`
 }
@@ -63,7 +63,7 @@ func FromFile(cfgpath string) (*Config, error) {
 }
 
 // load loads configuration from an io.Reader.
-// Note: the configuration is not checked for validity.
+// Note, the configuration does not get validated or sanitized.
 func load(in io.Reader) (*Config, error) {
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(in)

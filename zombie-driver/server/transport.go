@@ -59,11 +59,11 @@ type zombieHandler struct {
 	zombieTime   int     // minutes
 }
 
-// ServeHTTP fetches location updates from the drive-location service and
-// determines if the given driver ID identifies a zombie. If there are no
-// location udpates available, we do not assume the driver is a zombie. If
-// there are updates available, the driver is considered to be a zombie if the
-// total distance he moved during the zombieTime is smaller than zombieRadius.
+// ServeHTTP fetches location updates from the driver-location service and
+// determines if the given driver-ID identifies a zombie. If there are no
+// location udpates available, we *do not* assume that the driver is a zombie.
+// If there are updates available, the driver is considered to be a zombie if the
+// total distance she moved during the zombieTime is smaller than the zombieRadius.
 func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 
@@ -82,11 +82,12 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// something wrong with the URL
+	// something is wrong with the URL
 	if response.StatusCode == http.StatusNotFound {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
@@ -94,13 +95,13 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	response.Body.Close()
 
-	// we rely on locations being sorted by update time; either de- or ascending
+	// we rely on locations being sorted by update time, either de- or ascending
 	var locs []types.LocationUpdate
 	if err = json.Unmarshal(data, &locs); err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
 		return
 	}
-	// no data found for the driver ID
+	// no data found for the driver-ID
 	if len(locs) == 0 {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -110,7 +111,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(locs)-1; i++ {
 		dist += haversineKm(locs[i].Lat, locs[i].Long, locs[i+1].Lat, locs[i+1].Long)
 	}
-	// Note, type check of ID query param is performed by router only
+	// note, type check of `id` query param is performed by router only
 	driverId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		handler.WriteError(w, r, err, http.StatusInternalServerError)
@@ -125,7 +126,7 @@ func (z *zombieHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 const degreesToRadians = math.Pi / 180.0
 
-// calculate haversine distance for linear distance
+// haversineKm calculates haversine-distance for the linear distance.
 func haversineKm(lat1, long1, lat2, long2 float64) float64 {
 	earthRadiusKm := 6371.0
 

@@ -15,7 +15,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// not save for concurrent access; cfg.NumPublishers must be 1
 var consumerTests = []struct {
 	d string // description of test case
 	b []byte // published message body
@@ -38,7 +37,7 @@ var consumerTests = []struct {
 	},
 }
 
-// handler is a mock nsq handler which checks the handles messages body.
+// handler is a mock nsq-handler which checks the handled message's body.
 type handler struct {
 	received uint32
 	t        *testing.T
@@ -75,7 +74,7 @@ func TestNSQ(t *testing.T) {
 
 	// mock handler
 	h := &handler{t: t}
-	// TODO: mute logger
+	// todo, mute logger
 	consumer, err := NewNSQ(ncfg, h, logger)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -105,7 +104,7 @@ func TestNSQ(t *testing.T) {
 	consumer.Run()
 }
 
-// sendMessage is a helper function to send messages to the nsq server.
+// sendMessage is a helper function to send messages to the nsq-server.
 func sendMessage(topic string, body []byte) error {
 	httpclient := &http.Client{}
 	endpoint := fmt.Sprintf("http://127.0.0.1:4151/pub?topic=%s", topic)

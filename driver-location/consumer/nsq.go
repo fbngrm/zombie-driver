@@ -5,7 +5,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// NSQConfig represents configuration data for an nsq consumer.
+// NSQConfig represents configuration data for a nsq-consumer.
 type NSQConfig struct {
 	NumPublishers    int
 	Topic            string
@@ -15,7 +15,7 @@ type NSQConfig struct {
 	Cfg              *nsq.Config
 }
 
-// NSQ consumes a nsq channel.
+// NSQ consumes a nsq-channel.
 type NSQ struct {
 	c      *nsq.Consumer
 	cfg    *NSQConfig
@@ -23,13 +23,13 @@ type NSQ struct {
 }
 
 // NewNSQ returns a ready to use NSQ. It returns an error if consumer
-// initilization or connecting with the nsq server fails.
+// initilization or connecting with the nsq-server fails.
 func NewNSQ(cfg *NSQConfig, handler nsq.Handler, logger zerolog.Logger) (*NSQ, error) {
 	con, err := nsq.NewConsumer(cfg.Topic, cfg.Channel, cfg.Cfg)
 	if err != nil {
 		return nil, err
 	}
-	// Todo: set logger on consumer
+	// todo: set logger on consumer
 	con.AddConcurrentHandlers(handler, cfg.NumPublishers)
 	err = con.ConnectToNSQDs(cfg.NsqdTCPAddrs)
 	if err != nil {

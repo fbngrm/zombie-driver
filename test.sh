@@ -1,6 +1,5 @@
 #!/bin/bash
 
-rm -f *.dat
 NSQD_LOGFILE=$(mktemp -t nsqlookupd.XXXXXXX)
 echo "  logging to $NSQD_LOGFILE"
 

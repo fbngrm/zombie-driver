@@ -2,7 +2,7 @@ package testdata
 
 import "github.com/heetch/FabianG-technical-test/types"
 
-// This module contains test data of driving a roundabout in Libreville/Congo
+// This file contains test data of driving a roundabout in Libreville/Congo
 // for a few minutes.
 
 var Locations = []types.Location{

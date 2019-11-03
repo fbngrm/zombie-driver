@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// urls for test handlers
+// urls for test-handlers
 var gatewayConf = config.Config{
 	URLs: []config.URL{
 		config.URL{ // nsq
@@ -38,6 +38,7 @@ var gatewayConf = config.Config{
 	},
 }
 
+// test data by driver-ID
 var gatewayTests = map[string]struct {
 	d string // description of test case
 	z string // response of zombie-driver srevice mock
@@ -47,7 +48,7 @@ var gatewayTests = map[string]struct {
 }{
 	"0": {
 		d: "expect StatusBadGateway when failing to reach the backend",
-		p: "/drivers/0", // 0 test hijacked requests
+		p: "/drivers/0", // 0 => test hijacked requests; backend not reachable
 		s: http.StatusBadGateway,
 	},
 	"1": {
@@ -94,7 +95,7 @@ func TestProxy(t *testing.T) {
 		}
 		id := segments[2]
 
-		// not reachable
+		// backend not reachable
 		if id == "0" {
 			c, _, _ := w.(http.Hijacker).Hijack()
 			c.Close()
@@ -123,7 +124,7 @@ func TestProxy(t *testing.T) {
 	}))
 	defer zombieService.Close()
 
-	// Note, we need to overwrite the URL Host in the test config with the
+	// Note, we need to overwrite the URL host in the test config with the
 	// address of the test zombieService. The httptest.Server uses a local
 	// Listener initialized to listen on a random port. Using a custom Listener
 	// and providing a port would require supporting `serveFlag` and IPv6.
@@ -279,7 +280,7 @@ func TestNSQ(t *testing.T) {
 				if w, g := tt.s, res.StatusCode; w != g {
 					t.Errorf("want status code %d got %d", w, g)
 				}
-				// increase counter only if NSQ message has been sent successfully
+				// increase counter only if nsq message has been sent successfully
 				if res.StatusCode == http.StatusOK {
 					want = append(want, tt.b)
 					count++
@@ -293,7 +294,7 @@ func TestNSQ(t *testing.T) {
 		return
 	}
 
-	// need to set test timeout; potentially blocks forever if not
+	// needs to set a test timeout; potentially blocks forever if not
 	// all messages are delivered
 	c := newConsumerHandler(t, gatewayConf.URLs[0].NSQ.Topic, count)
 	err = c.read(gatewayConf.URLs[0].NSQ.TCPAddrs[0])

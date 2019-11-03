@@ -9,18 +9,18 @@ import (
 	nsq "github.com/nsqio/go-nsq"
 )
 
-// Publisher provides a method that is used in nsq handlers to publish messages.
+// Publisher provides a method that is used in nsq-handlers to publish messages.
 type Publisher interface {
 	Publish(timestamp int64, key string, l types.LocationUpdate) error
 }
 
-// LocationUpdater is a nsq handler.
+// LocationUpdater is a nsq-handler.
 // https://github.com/nsqio/go-nsq/blob/master/consumer.go#L20-L38
 type LocationUpdater struct {
 	Publisher
 }
 
-// HandleMessage publishes location update extracted from a nsq message.
+// HandleMessage publishes a location update extracted from a nsq-message.
 func (h *LocationUpdater) HandleMessage(m *nsq.Message) error {
 	var l types.Location
 	// marshal instead of decode since we expect a single JSON string only not

@@ -50,7 +50,7 @@ func newGatewayHandler(ctx context.Context, cfg *config.Config, logger zerolog.L
 		if err != nil {
 			return nil, err
 		}
-		// relies on valid URL configuration
+		// relies on valid URL configuration; does not support query params
 		router.Handle(url.Path, middleware.Use(h, mw...)).Methods(url.Method)
 	}
 	router.Handle("/ready", &handler.ReadinessHandler{})
@@ -81,7 +81,7 @@ func newHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (http.
 	}
 }
 
-// nsqHandler transforms locations from http requests to nsq messages.
+// nsqHandler transforms locations from http-requests to nsq-messages.
 type nsqHandler struct {
 	topic     string
 	producers map[string]*nsq.Producer // safe for concurrent reads
@@ -92,7 +92,7 @@ func newNSQHandler(ctx context.Context, u config.URL, logger zerolog.Logger) (*n
 	cfg.UserAgent = fmt.Sprintf("go-nsq/%s", nsq.VERSION)
 
 	// producers will lazily connect to the nsqd instance (and re-connect) when
-	// Publish commands are executed. Note that throttling is not enabled
+	// Publish commands are executed. note, that throttling is not enabled
 	producers := make(map[string]*nsq.Producer)
 	for _, addr := range u.NSQ.TCPAddrs {
 		producer, err := nsq.NewProducer(addr, cfg)
@@ -136,7 +136,7 @@ func (n *nsqHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// relies on sane input for 'id'; currently sanitized by mux only
+	// relies on sane input for `id`, currently sanitized by mux only
 	l.ID = mux.Vars(r)["id"]
 	b, err := json.Marshal(l)
 	if err != nil {
