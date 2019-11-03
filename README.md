@@ -66,7 +66,7 @@ make all # builds all services
 Services are intended to be ran in a docker container.
 
 ```bash
-make up # builds docker images and runs all services and backing services in a container.
+make up # builds docker images and runs all services and backing services.
 ```
 
 ###### Tests
@@ -97,7 +97,7 @@ make -C <service_name> all # builds <service_name>
 After making changes to the code, you need to rebuild the image(s):
 
 ```bash
-docker-compose build --no-cache <service_name>
+docker-compose up --detach --build <service_name>
 ```
 
 ### Configuration
