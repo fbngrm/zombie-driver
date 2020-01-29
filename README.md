@@ -1,25 +1,6 @@
 ![zombie](zombie-150.png)
 
-# Implementation
-This branch implements the requirements defined in the [task](https://github.com/heetch/FabianG-technical-test/blob/development/REQUIREMENTS.md) description and additional functionality:
-
-* Configuration via environment variables or command-line args
-* Instrumentation
-* Circuit-breaker
-* Docker containers
-* Structured logging
-* Configurable zombie-driver identification `Predicate/business rules`
-
-# Overview
-
-This document is organized in two sections:
-
-* Documentation - describes setup and usage
-* Architecture - describes the design and architecture approach
-
-# Documentation
-
-### Setup
+## Setup
 This section assumes there is a go, docker, make and git installation available on the system.
 
 To check your installation, run:
@@ -40,7 +21,7 @@ cd FabianG-technical-test
 git checkout development
 ```
 
-##### Dependency management
+### Dependency management
 For handling dependencies, go modules are used.
 This requires to have a go version > 1.11 installed and setting `GO111MODULE=1`.
 If the go version is >= 1.13, modules are enabled by default.
@@ -55,21 +36,21 @@ The configuration resides in the [docker-compose](https://github.com/heetch/Fabi
 The Dockerfiles used to build images are located in the project root.
 
 
-###### Build
+### Build
 Builds will are located in the `/bin` sub-directory of each service. Binaries use the latest git commit hash or tag as a version.
 
 ```bash
 make all # builds all services
 ```
 
-###### Run
+### Run
 Services are intended to be ran in a docker container.
 
 ```bash
 make up # builds docker images and runs all services and backing services.
 ```
 
-###### Tests
+### Tests
 There are several targets available to run tests.
 
 ```bash
@@ -78,14 +59,14 @@ make test-cover # creates coverage profiles for all services
 make test-race # tests services for race conditions
 ```
 
-###### Lint
+### Lint
 There is a lint target which runs [golangci-lint](https://github.com/golangci/golangci-lint) in a docker container.
 
 ```bash
 make lint
 ```
 
-###### Service level
+### Service level
 Except for `up` and `lint`, all targets are available on a service level.
 Run the make command from the respective service directory or use the `-C` argument.
 
@@ -93,7 +74,7 @@ Run the make command from the respective service directory or use the `-C` argum
 make -C <service_name> all # builds <service_name>
 ```
 
-##### Code changes
+### Code changes
 After making changes to the code, you need to rebuild the image(s):
 
 ```bash
@@ -106,7 +87,7 @@ For configuring the services via environment variables use the docker-compose fi
 Alternatively, provide arguments to the command directly.
 
 
-##### gateway
+### gateway
 
 | Arg              | ENV            | default |                           | Required |
 |------------------|----------------|---------|---------------------------|----------|
@@ -117,7 +98,7 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay | SHUTDOWN_DELAY | 5000    | shutdown delay in ms      | False    |
 | --version        |                |         | show application version  | False    |
 
-##### driver-location
+### driver-location
 
 | Arg                       | ENV                    | default         |                                | Required |
 |---------------------------|------------------------|-----------------|--------------------------------|----------|
@@ -135,7 +116,7 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay          | SHUTDOWN_DELAY         | 5000            | shutdown delay in ms           | False    |
 | --version                 |                        |                 | show application version       | False    |
 
-##### zombie-driver
+### zombie-driver
 
 | Arg                   | ENV                 | default       |                                             | Required |
 |-----------------------|---------------------|---------------|---------------------------------------------|----------|
@@ -148,10 +129,10 @@ Alternatively, provide arguments to the command directly.
 | --shutdown-delay      | SHUTDOWN_DELAY      | 5000          | shutdown delay in ms                        | False    |
 | --version             |                     |               | show application version                    | False    |
 
-#### Logging
+### Logging
 The current setup uses a human friendly logging format. Service loggers attach the service name and build version to the log output.
 
-#### Bugs
+### Bugs
 Setting logger on NSQ producers and consumers.
 The logger used in the project does not implement the required interface to be used in NSQ.
 Thus, logs are a bit polluted.
@@ -194,90 +175,3 @@ Request-Id: bmq2ij790i5ub07vlkk0
 
 {"id":1,"zombie":false}
 ```
-
-# Architecture
-I mostly followed the go [conventions](https://golang.org/doc/code.html) and [proverbs](https://go-proverbs.github.io/) as well as the [12 Factor-App](https://12factor.net/) principles.
-
-The interfaces are kept small to bigger the abstraction.
-Variable names are short when they are used close to their declaration.
-They are more meaningful if they are used outside the scope they were defined.
-Errors are used as values.
-
-Furthermore, I followed the dependency injection and fail early approach, with very few exceptions.
-Components are provided all dependencies they need during instantiation.
-The result is either a functioning instance or an error.
-On application start-up,  an error results in termination.
-Runtime errors do not lead to a crash or panic.
-
-Configuration is injected at start-up.
-
-Termination signals lead to a graceful shutdown.
-Meaning, all servers and handlers stop accepting new requests, process their current workload and shut down.
-Though, there is a configurable shutdown timeout, which may prevent this.
-
-### Configuration
-The configuration of the services, e.g. circuit-breaker rules, and backing services (NSQ, redis) is not at all production ready.
-The current state should be considered as a prototype to solve the coding challenge.
-
-### Instrumentation
-Only response time metrics and redis method calls are collected as an example of instrumentation.
-In a real world application the runtime behavior would be monitored in a more detailed way.
-Prometheus is used for aggregating the metrics, which are provided by an HTTP handler to be scraped by an prometheus collector.
-A graceful shutdown of the server ensures that the metrics will be scraped eventually by checking against an access counter.
-Though, the shutdown timeout prevents this from being guaranteed.
-
-### Tests
-There are unit tests for core functionality, things expected to break and for edge/error cases.
-In general I think testing on package boundaries as well as core functionality internally is a better approach than just aiming for a certain percentage of coverage.
-Regarding a few error cases, test coverage should be increased though.
-
-#### Integration tests
-Tests that require a NSQ server use a helper script to start and shutdown a docker instance in the background but stream logs to a file to not obfuscate test logs.
-The log file is located in the `/tmp` directory.
-
-##### Testdata
-There is a testdata directory which provides simple real world data used in most tests.
-
-##### Redis
-Since there are two redis commands used only, I implemented an interface to provide a simple mock in tests.
-This requires an extra layer of abstraction which could be avoided using a redis mock library.
-If there will be more commands used, I would prefer to add a dependency and remove the abstraction.
-
-### Dependencies
-In general, the code is written in a way to use as few dependencies as possible and make use of the standard library whenever possible.
-This applies also for tests, where no external libraries are used since they mostly do not provide significant advantages but may obfuscate clear readability.
-This especially applies to BDD (Behavioral Driven Design/Development) test libraries, which often introduce needless indirection and conceptual overhead.
-
-##### Shared libraries
-There are a few shared libraries at the project root which are used in all three services.
-I would tend to move each service to an own repo and copy over the library code along.
-Although, using go modules with versioning, providing the ability to update incrementally, makes it easier to handle shared libraries now.
-
-### Circuit-breaker
-The circuit-breaker should additionally be implemented as middleware for HTTP handlers.
-This requires a refactoring of the middleware which is out-of-scope during this test.
-Note, that no circuit-breaker is applied in the [gateway HTTP proxy handler](https://github.com/heetch/FabianG-technical-test/blob/development/gateway/server/handler.go#L68-L78).
-
-### Workflow
-Since I am the only contributor (except for initial commits) and there will be a single PR, I followed a rather "pragmatic" git workflow.
-I implemented features in separate branches in the beginning but stopped to continue this at some point.
-I am aware that this flow is not ideal for teamwork.
-
-### Todo
-* Fix NSQ logging
-* Fix driver-location URL in zombie-driver config (avoid format string)
-* Prometheus scraper + dashboard
-* HTTPS (gateway, NSQ)
-* Authentication/sessions
-* Load testing
-* Tracing
-* Rewrite middleware
-* Custom proxy/circuit-breaker
-* Benchmarks
-* Resilience
-* Load-balancer
-
----
-
-> Everything should be made as simple as possible, but not simpler. - A. Einstein
-
