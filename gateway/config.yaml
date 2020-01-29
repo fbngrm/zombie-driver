@@ -1,11 +1,13 @@
 urls:
   -
-    path: "/drivers/:id/locations"
+    path: "/drivers/{id:[0-9]+}/locations"
     method: "PATCH"
     nsq:
       topic: "locations"
+      dest_tcp_addr:
+          - "nsqd:4150"
   -
-    path: "/drivers/:id"
+    path: "/drivers/{id:[0-9]+}"
     method: "GET"
     http:
-      host: "zombie-driver"
+      host: "zombie-driver:8082"

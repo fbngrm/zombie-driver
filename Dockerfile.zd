@@ -1,0 +1,8 @@
+FROM golang:1 AS build
+COPY . /workspace
+WORKDIR /workspace
+RUN make -C ./zombie-driver/ build
+
+FROM debian:stable-slim
+COPY --from=build /workspace/zombie-driver/bin/zombie-driver /bin/zombie-driver
+EXPOSE 8082 9104
